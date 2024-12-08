@@ -1,24 +1,22 @@
 const fetch = require('node-fetch');
 
-exports.handler = async function(event, context) {
-  // OPTIONS 메서드 처리 (CORS Preflight)
+exports.handler = async function (event, context) {
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 200,
       headers: {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type'
+        'Access-Control-Allow-Headers': 'Content-Type',
       },
-      body: 'OK'
+      body: 'OK',
     };
   }
 
-  // POST 이외의 메서드 차단
   if (event.httpMethod !== 'POST') {
-    return { 
-      statusCode: 405, 
-      body: JSON.stringify({ error: 'Method not allowed' }) 
+    return {
+      statusCode: 405,
+      body: JSON.stringify({ error: 'Method not allowed' }),
     };
   }
 
@@ -26,7 +24,6 @@ exports.handler = async function(event, context) {
     const data = JSON.parse(event.body);
     const { nickname, rating, menu, review } = data;
 
-    // 유효성 검사
     if (!nickname || !rating || !menu || !review) {
       console.error('Missing required fields:', { nickname, rating, menu, review });
       return {
@@ -35,19 +32,25 @@ exports.handler = async function(event, context) {
       };
     }
 
-    // OpenAI API 호출
-    const prompt = `고객 별명: ${nickname}\n별점: ${rating}\n메뉴: ${menu}\n리뷰 내용: ${review}\n\n위 정보를 바탕으로 답글을 작성해 주세요.`;
-    const openaiResponse = await fetch("https://api.openai.com/v1/completions", {
-      method: "POST",
+    const messages = [
+      { role: 'system', content: '고객 리뷰에 대한 적절한 답변을 생성하세요.' },
+      {
+        role: 'user',
+        content: `고객 별명: ${nickname}\n별점: ${rating}\n메뉴: ${menu}\n리뷰 내용: ${review}\n\n위 정보를 바탕으로 답글을 작성해 주세요.`,
+      },
+    ];
+
+    const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
         Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "text-davinci-003",
-        prompt: prompt,
-        max_tokens: 150,
-        temperature: 0.7,
+        model: 'gpt-4o-mini', // 사용하고자 하는 OpenAI 모델
+        messages: messages,
+        max_tokens: 500,
+        temperature: 0.4,
       }),
     });
 
@@ -61,10 +64,13 @@ exports.handler = async function(event, context) {
       };
     }
 
-    const reply = result.choices[0].text.trim();
+    const reply = result.choices[0].message.content.trim();
 
     return {
       statusCode: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+      },
       body: JSON.stringify({ reply }),
     };
   } catch (error) {
