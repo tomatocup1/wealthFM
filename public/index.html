@@ -484,46 +484,167 @@ document.getElementById('generateReply').addEventListener('click', async functio
             </div>
         </div>
         <div id="applicationFormSection" class="container" style="margin-top:50px; text-align:center;">
-            <h2 style="text-align:center; margin-bottom:30px;">상담 신청</h2>
-            <div style="max-width:600px; margin:0 auto; text-align:left;">
-                <form id="applicationForm">
-                    <label for="businessType">사업유형:</label><br>
-                    <select id="businessType" name="businessType" style="width:100%; padding:10px; margin-bottom:10px;">
-                        <option value="개인사업자">개인사업자</option>
-                        <option value="법인사업자">법인사업자</option>
-                    </select>
+            <h2 style="text-align:center; margin-bottom:30px; font-size:2em; color:var(--heading-color);">상담 신청</h2>
+            
+            <div style="max-width:600px; margin:0 auto; padding:0 20px;">
+                <form id="applicationForm" style="background-color:white; padding:30px; border-radius:15px; box-shadow:0 4px 6px rgba(0,0,0,0.1);">
+                    <!-- 사업유형 -->
+                    <div style="margin-bottom:20px;">
+                        <label for="businessType" style="display:block; text-align:left; margin-bottom:8px; font-size:1.1em; color:var(--heading-color);">
+                            사업유형 <span style="color:#ff4444;">*</span>
+                        </label>
+                        <select id="businessType" name="businessType" 
+                            style="width:100%; 
+                                   padding:12px; 
+                                   border:1px solid #ddd; 
+                                   border-radius:8px; 
+                                   font-size:1em; 
+                                   background-color:#fafafa;">
+                            <option value="개인사업자">개인사업자</option>
+                            <option value="법인사업자">법인사업자</option>
+                        </select>
+                    </div>
         
-                    <label for="registrationNumber">사업자등록번호:</label><br>
-                    <input type="text" id="registrationNumber" name="registrationNumber" style="width:100%; padding:10px; margin-bottom:10px;">
+                    <!-- 사업자등록번호 -->
+                    <div style="margin-bottom:20px;">
+                        <label for="registrationNumber" style="display:block; text-align:left; margin-bottom:8px; font-size:1.1em; color:var(--heading-color);">
+                            사업자등록번호 <span style="color:#ff4444;">*</span>
+                        </label>
+                        <input type="text" id="registrationNumber" name="registrationNumber" 
+                            style="width:100%; 
+                                   box-sizing:border-box; 
+                                   padding:12px; 
+                                   border:1px solid #ddd; 
+                                   border-radius:8px; 
+                                   font-size:1em; 
+                                   background-color:#fafafa;">
+                    </div>
         
-                    <label for="businessName">사업자 상호:</label><br>
-                    <input type="text" id="businessName" name="businessName" style="width:100%; padding:10px; margin-bottom:10px;">
+                    <!-- 사업자 상호 -->
+                    <div style="margin-bottom:20px;">
+                        <label for="businessName" style="display:block; text-align:left; margin-bottom:8px; font-size:1.1em; color:var(--heading-color);">
+                            사업자 상호 <span style="color:#ff4444;">*</span>
+                        </label>
+                        <input type="text" id="businessName" name="businessName" 
+                            style="width:100%; 
+                                   box-sizing:border-box; 
+                                   padding:12px; 
+                                   border:1px solid #ddd; 
+                                   border-radius:8px; 
+                                   font-size:1em; 
+                                   background-color:#fafafa;">
+                    </div>
         
-                    <label for="businessAddress">사업자 주소:</label><br>
-                    <input type="text" id="businessAddress" name="businessAddress" style="width:100%; padding:10px; margin-bottom:10px;">
+                    <!-- 사업자 주소 -->
+                    <div style="margin-bottom:20px;">
+                        <label for="businessAddress" style="display:block; text-align:left; margin-bottom:8px; font-size:1.1em; color:var(--heading-color);">
+                            사업자 주소
+                        </label>
+                        <input type="text" id="businessAddress" name="businessAddress" 
+                            style="width:100%; 
+                                   box-sizing:border-box; 
+                                   padding:12px; 
+                                   border:1px solid #ddd; 
+                                   border-radius:8px; 
+                                   font-size:1em; 
+                                   background-color:#fafafa;">
+                    </div>
         
-                    <label for="representativeName">대표자명:</label><br>
-                    <input type="text" id="representativeName" name="representativeName" style="width:100%; padding:10px; margin-bottom:10px;">
+                    <!-- 대표자명 -->
+                    <div style="margin-bottom:20px;">
+                        <label for="representativeName" style="display:block; text-align:left; margin-bottom:8px; font-size:1.1em; color:var(--heading-color);">
+                            대표자명 <span style="color:#ff4444;">*</span>
+                        </label>
+                        <input type="text" id="representativeName" name="representativeName" 
+                            style="width:100%; 
+                                   box-sizing:border-box; 
+                                   padding:12px; 
+                                   border:1px solid #ddd; 
+                                   border-radius:8px; 
+                                   font-size:1em; 
+                                   background-color:#fafafa;">
+                    </div>
         
-                    <label for="representativeContact">대표자 연락처:</label><br>
-                    <input type="text" id="representativeContact" name="representativeContact" style="width:100%; padding:10px; margin-bottom:10px;">
+                    <!-- 대표자 연락처 -->
+                    <div style="margin-bottom:20px;">
+                        <label for="representativeContact" style="display:block; text-align:left; margin-bottom:8px; font-size:1.1em; color:var(--heading-color);">
+                            대표자 연락처 <span style="color:#ff4444;">*</span>
+                        </label>
+                        <input type="text" id="representativeContact" name="representativeContact" 
+                            style="width:100%; 
+                                   box-sizing:border-box; 
+                                   padding:12px; 
+                                   border:1px solid #ddd; 
+                                   border-radius:8px; 
+                                   font-size:1em; 
+                                   background-color:#fafafa;">
+                    </div>
         
-                    <label for="services">서비스 신청:</label><br>
-                    <input type="checkbox" id="baemin" name="services" value="배달의 민족">
-                    <label for="baemin">배달의 민족</label><br>
-                    <input type="checkbox" id="yogiyo" name="services" value="요기요">
-                    <label for="yogiyo">요기요</label><br>
-                    <input type="checkbox" id="coupangEats" name="services" value="쿠팡잇츠">
-                    <label for="coupangEats">쿠팡잇츠</label><br>
+                    <!-- 서비스 신청 -->
+                    <div style="margin-bottom:20px; text-align:left;">
+                        <label style="display:block; margin-bottom:12px; font-size:1.1em; color:var(--heading-color);">
+                            서비스 신청
+                        </label>
+                        <div style="display:flex; flex-direction:column; gap:10px;">
+                            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                                <input type="checkbox" id="baemin" name="services" value="배달의 민족" style="width:18px; height:18px;">
+                                <span style="font-size:1em;">배달의 민족</span>
+                            </label>
+                            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                                <input type="checkbox" id="yogiyo" name="services" value="요기요" style="width:18px; height:18px;">
+                                <span style="font-size:1em;">요기요</span>
+                            </label>
+                            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                                <input type="checkbox" id="coupangEats" name="services" value="쿠팡잇츠" style="width:18px; height:18px;">
+                                <span style="font-size:1em;">쿠팡잇츠</span>
+                            </label>
+                        </div>
+                    </div>
         
-                    <label for="inquiry">문의 사항:</label><br>
-                    <textarea id="inquiry" name="inquiry" rows="4" style="width:100%; padding:10px; margin-bottom:10px;"></textarea>
+                    <!-- 문의 사항 -->
+                    <div style="margin-bottom:25px;">
+                        <label for="inquiry" style="display:block; text-align:left; margin-bottom:8px; font-size:1.1em; color:var(--heading-color);">
+                            문의 사항
+                        </label>
+                        <textarea id="inquiry" name="inquiry" rows="4" 
+                            style="width:100%; 
+                                   box-sizing:border-box; 
+                                   padding:12px; 
+                                   border:1px solid #ddd; 
+                                   border-radius:8px; 
+                                   font-size:1em; 
+                                   resize:vertical; 
+                                   background-color:#fafafa;">
+                        </textarea>
+                    </div>
         
-                    <button type="button" id="submitForm" style="width:100%; padding:15px; background-color:#FFD700; border:none; font-size:1.2em; cursor:pointer; border-radius:10px;">
+                    <!-- 필수 항목 안내 -->
+                    <div style="margin-bottom:20px; text-align:left; font-size:0.9em; color:#666;">
+                        <span style="color:#ff4444;">*</span> 표시는 필수 입력 항목입니다.
+                    </div>
+        
+                    <!-- 제출 버튼 -->
+                    <button type="button" id="submitForm" 
+                        style="width:100%; 
+                               padding:15px; 
+                               background-color:var(--accent-color); 
+                               border:none; 
+                               border-radius:10px; 
+                               font-size:1.2em; 
+                               font-weight:bold; 
+                               cursor:pointer; 
+                               transition:all 0.3s ease;">
                         상담 신청
                     </button>
                 </form>
-                <div id="formResponse" style="margin-top:20px;"></div>
+        
+                <!-- 응답 메시지 -->
+                <div id="formResponse" 
+                    style="margin-top:20px; 
+                           padding:15px; 
+                           border-radius:8px; 
+                           font-size:1.1em;">
+                </div>
             </div>
         </div>
         
