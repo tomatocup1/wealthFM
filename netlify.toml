@@ -1,6 +1,7 @@
 [build]
-  publish = "fm_web/public"  # 정적 파일 경로
-  functions = "fm_web/netlify/functions"  # 서버리스 함수 경로
+  base = "fm_web"  # Base 디렉토리 설정
+  publish = "public"  # 정적 파일 경로
+  functions = "netlify/functions"  # 서버리스 함수 경로
 
 [[redirects]]
   from = "/*"
