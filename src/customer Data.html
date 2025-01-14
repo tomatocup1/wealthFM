@@ -246,7 +246,7 @@
                     <div class="form-group">
                         <label for="user_id">사용자 ID<span class="required-mark">*</span></label>
                         <input type="text" id="user_id" name="user_id" required placeholder="원하는 사용자 ID를 입력하세요">
-                        <button onclick="checkUserId()">ID 중복 검사</button>
+                        <button type="button" onclick="window.checkUserId()">ID 중복 검사</button>
                     </div>
                     <div id="idCheckResult"></div> 
                     <div class="form-group">
@@ -367,40 +367,7 @@
 });
 
     </script>
-    
-    <script>
-        function checkUserId() {
-            var userId = document.getElementById('user_id').value;
-            if (userId === "") {
-                alert("ID를 입력해주세요.");
-                return;
-            }
-        
-            // 서버에 중복 검사 요청 보내기
-            fetch('/check-user-id', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ userId: userId })
-            })
-            .then(response => response.json())
-            .then(data => {
-                var resultElement = document.getElementById('idCheckResult');
-                if (data.message.includes("사용 가능한")) {
-                    resultElement.style.color = 'green';
-                } else {
-                    resultElement.style.color = 'red';
-                }
-                resultElement.innerHTML = data.message;
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('오류가 발생했습니다. 다시 시도해주세요.');
-            });
-        }
-        </script>
-        
+       
     <script type="module">
         import { setupFormHandler } from '/js/customerData.js';
         document.addEventListener('DOMContentLoaded', setupFormHandler);
