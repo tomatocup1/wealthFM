@@ -1,33 +1,33 @@
 // error_logs.js
-async function fetchErrorLogs(date, platform = 'all', category = 'all') {
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+const supabase = createClient(supabaseUrl, supabaseKey)
+
+// 에러 로그 조회 함수
+async function fetchLogData(date) {
     try {
-        let query = supabase
+        const startOfDay = new Date(date);
+        startOfDay.setHours(0, 0, 0, 0);
+        
+        const endOfDay = new Date(date);
+        endOfDay.setHours(23, 59, 59, 999);
+
+        const { data, error } = await supabase
             .from('error_logs')
             .select('*')
+            .gte('occurred_at', startOfDay.toISOString())
+            .lte('occurred_at', endOfDay.toISOString())
             .order('occurred_at', { ascending: false });
 
-        // 날짜 필터링 (해당 날짜의 데이터만 가져오기)
-        if (date) {
-            const startDate = new Date(date);
-            const endDate = new Date(date);
-            endDate.setDate(endDate.getDate() + 1);
-            query = query.gte('occurred_at', startDate.toISOString())
-                        .lt('occurred_at', endDate.toISOString());
-        }
-
-        if (platform !== 'all') {
-            query = query.eq('platform', platform);
-        }
-        if (category !== 'all') {
-            query = query.eq('category', category);
-        }
-
-        const { data, error } = await query;
-
         if (error) throw error;
+
+        console.log('Fetched logs:', data); // 데이터 확인용 로그
         return data;
     } catch (error) {
-        console.error('에러 로그 조회 실패:', error);
+        console.error('Error fetching logs:', error);
         throw error;
     }
 }
@@ -35,17 +35,19 @@ async function fetchErrorLogs(date, platform = 'all', category = 'all') {
 // 로그 테이블 업데이트 함수
 function updateLogTable(logs) {
     const tbody = document.getElementById('logTableBody');
+    if (!logs || logs.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center">해당 날짜의 오류 로그가 없습니다.</td></tr>';
+        return;
+    }
+
     tbody.innerHTML = logs.map(log => `
         <tr>
-            <td>${new Date(log.occurred_at).toLocaleString('ko-KR', { 
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            })}</td>
-            <td><span class="badge badge-${log.category === '오류' ? 'error' : 'warning'}">${log.category}</span></td>
+            <td>${new Date(log.occurred_at).toLocaleString('ko-KR')}</td>
+            <td>
+                <span class="badge ${log.category === '오류' ? 'badge-error' : 'badge-warning'}">
+                    ${log.category || '-'}
+                </span>
+            </td>
             <td>${log.platform || '-'}</td>
             <td>${log.store_name || '-'}</td>
             <td>${log.error_type || '-'}</td>
@@ -54,74 +56,81 @@ function updateLogTable(logs) {
     `).join('');
 }
 
-// 필터링 및 검색 설정
+// 날짜 선택 이벤트 핸들러
+function setupCalendarEvents() {
+    document.querySelectorAll('#calendarBody td[data-date]').forEach(td => {
+        td.addEventListener('click', async function() {
+            const date = this.dataset.date;
+            const currentDate = new Date();
+            const selectedDate = new Date(
+                currentDate.getFullYear(),
+                currentDate.getMonth(),
+                parseInt(date)
+            );
+
+            // 이전 선택 해제
+            document.querySelectorAll('#calendarBody td.selected').forEach(el => {
+                el.classList.remove('selected');
+            });
+            this.classList.add('selected');
+
+            try {
+                const logs = await fetchLogData(selectedDate);
+                updateLogTable(logs);
+            } catch (error) {
+                console.error('Error:', error);
+                alert('데이터 로드 중 오류가 발생했습니다.');
+            }
+        });
+    });
+}
+
+// 필터 설정
 function setupFilters() {
     const searchInput = document.querySelector('.search-input');
     const platformSelect = document.querySelector('.filter-select[data-filter="platform"]');
     const categorySelect = document.querySelector('.filter-select[data-filter="category"]');
 
-    const handleFilter = async () => {
-        const dateStr = selectedDate.toISOString().split('T')[0];
-        const platform = platformSelect.value;
-        const category = categorySelect.value;
-        const logs = await fetchErrorLogs(dateStr, platform, category);
-        
-        // 검색어로 추가 필터링
+    function filterLogs() {
+        const rows = document.querySelectorAll('#logTableBody tr');
         const searchTerm = searchInput.value.toLowerCase();
-        const filteredLogs = searchTerm ? logs.filter(log => 
-            (log.store_name && log.store_name.toLowerCase().includes(searchTerm)) ||
-            (log.error_message && log.error_message.toLowerCase().includes(searchTerm))
-        ) : logs;
-        
-        updateLogTable(filteredLogs);
-    };
+        const selectedPlatform = platformSelect.value;
+        const selectedCategory = categorySelect.value;
 
-    searchInput.addEventListener('input', handleFilter);
-    platformSelect.addEventListener('change', handleFilter);
-    categorySelect.addEventListener('change', handleFilter);
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            const platform = row.children[2].textContent;
+            const category = row.children[1].textContent.trim();
+            
+            const matchesSearch = text.includes(searchTerm);
+            const matchesPlatform = selectedPlatform === 'all' || platform === selectedPlatform;
+            const matchesCategory = selectedCategory === 'all' || category === selectedCategory;
+
+            row.style.display = matchesSearch && matchesPlatform && matchesCategory ? '' : 'none';
+        });
+    }
+
+    searchInput.addEventListener('input', filterLogs);
+    platformSelect.addEventListener('change', filterLogs);
+    categorySelect.addEventListener('change', filterLogs);
 }
 
-// 페이지 초기화
+// 페이지 로드 시 초기화
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        // 초기 데이터 로드
-        const today = new Date().toISOString().split('T')[0];
-        const logs = await fetchErrorLogs(today);
-        updateLogTable(logs);
-        
-        // 필터 설정
-        setupFilters();
-        
-        // 캘린더 설정
+        // 캘린더 생성
         generateCalendar();
         setupCalendarEvents();
+        setupFilters();
+
+        // 오늘 날짜 데이터 로드
+        const today = new Date();
+        const logs = await fetchLogData(today);
+        updateLogTable(logs);
     } catch (error) {
         console.error('초기화 실패:', error);
         alert('페이지 로드 중 오류가 발생했습니다.');
     }
 });
 
-function setupCalendarEvents() {
-    document.querySelectorAll('#calendarBody td[data-date]').forEach(td => {
-        td.addEventListener('click', async function() {
-            const date = new Date(
-                selectedDate.getFullYear(),
-                selectedDate.getMonth(),
-                parseInt(this.dataset.date)
-            );
-            
-            // UI 업데이트
-            document.querySelectorAll('#calendarBody td.selected').forEach(el => 
-                el.classList.remove('selected'));
-            this.classList.add('selected');
-            
-            // 데이터 로드
-            try {
-                const logs = await fetchErrorLogs(date.toISOString().split('T')[0]);
-                updateLogTable(logs);
-            } catch (error) {
-                alert('데이터 로드 실패: ' + error.message);
-            }
-        });
-    });
-}
+export { generateCalendar, fetchLogData, updateLogTable };
