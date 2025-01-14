@@ -56,10 +56,9 @@ function collectFormData(storeCode) {
     const loginData = {
         store_code: storeCode,
         store_name: document.getElementById('store_name').value,
-        owner_name: document.getElementById('owner_name').value, // owner_name 추가        
-        full_name: document.getElementById('owner_name').value,
-        user_id: document.getElementById('email').value.split('@')[0],
-        password_hash: generateDefaultPassword(),
+        owner_name: document.getElementById('owner_name').value, // owner_name 추가
+        user_id: document.getElementById('user_id').value, // 사용자가 입력한 사용자 ID 사용
+        password_hash: document.getElementById('password').value, // 사용자가 입력한 비밀번호 사용
         email: document.getElementById('email').value,
         phone: document.getElementById('phone').value,
         business_number: document.getElementById('business_number').value,
@@ -81,7 +80,6 @@ function collectFormData(storeCode) {
         coupang_pw: document.getElementById('coupang_pw').value,
         yogiyo_id: document.getElementById('yogiyo_id').value,
         yogiyo_pw: document.getElementById('yogiyo_pw').value,
-        owner_name: document.getElementById('owner_name').value,
         baemin_code: document.getElementById('baemin_code').value,
         baemin1_code: document.getElementById('baemin1_code').value,
         coupang_code: document.getElementById('coupang_code').value,
