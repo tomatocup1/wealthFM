@@ -1,0 +1,101 @@
+/* 공통 변수 정의 */
+:root {
+    --primary-color: #FFB6C1;
+    --secondary-color: #FFF0F5;
+    --accent-color: #1b2024;
+    --text-color: #1f1010;
+    --heading-color: #1b2024;
+    --background-color: #FFFAF0;
+}
+
+/* 기본 스타일 초기화 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    line-height: 1.6;
+}
+
+/* 네비게이션 바 스타일 */
+.navbar {
+    background-color: #ffffff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 1rem;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 1000;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.nav-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-brand {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--heading-color);
+}
+
+.nav-menu {
+    display: flex;
+    gap: 2rem;
+}
+
+.nav-link {
+    text-decoration: none;
+    color: var(--text-color);
+    padding: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.nav-link:hover {
+    color: var(--accent-color);
+}
+
+.nav-link.active {
+    color: var(--accent-color);
+    border-bottom: 2px solid var(--accent-color);
+}
+
+.role-select {
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-family: 'Arial', sans-serif;
+}
+
+/* 메인 컨텐츠 영역 */
+.main-content {
+    margin-top: 80px;
+    padding: 2rem 0;
+}
+
+/* 반응형 스타일 */
+@media (max-width: 768px) {
+    .nav-menu {
+        display: none;
+    }
+    
+    .container {
+        padding: 0 10px;
+    }
+    
+    .role-select {
+        font-size: 14px;
+    }
+}

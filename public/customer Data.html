@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>고객 데이터 관리 - 부의 정석</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .navbar {
+            background-color: #ffffff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 1rem;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-brand {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--heading-color);
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: var(--text-color);
+            padding: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .nav-link:hover {
+            color: var(--accent-color);
+        }
+
+        .nav-link.active {
+            color: var(--accent-color);
+            border-bottom: 2px solid var(--accent-color);
+        }
+
+        .role-select {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: 'Arial', sans-serif;
+        }
+
+        /* 페이지 고유 스타일 */
+        .container-form {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .form-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 30px;
+            color: #1b2024;
+        }
+
+        .form-section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #1b2024;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #1b2024;
+            font-weight: 500;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #1b2024;
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .platform-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .platform-title {
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #1b2024;
+        }
+
+        .platform-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .submit-button {
+            background-color: #1b2024;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .required-mark {
+            color: #ff4444;
+            margin-left: 4px;
+        }
+
+        .readonly-input {
+            background-color: #f5f5f5;
+            cursor: not-allowed;
+        }
+
+        @media (max-width: 768px) {
+            .platform-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .container-form {
+                padding: 20px;
+            }
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/js/scripts.js" defer></script>
+</head>
+<body>
+    <!-- 네비게이션 바 추가 -->
+    <nav class="navbar">
+        <div class="container nav-content">
+            <div class="nav-brand">부의 정석</div>
+            <div class="nav-menu" id="navMenu">
+                <a href="#" class="nav-link active">리뷰 모아보기</a>
+                <a href="customer Data.html" class="nav-link">고객 데이터 관리</a>
+                <a href="error_logs.html" class="nav-link">에러 로그</a>
+            </div>
+            <select class="role-select" id="roleSelect">
+                <option value="webmaster">웹마스터</option>
+                <option value="admin">관리자</option>
+                <option value="franchise">프랜차이즈</option>
+                <option value="owner">점주님</option>
+            </select>
+        </div>
+    </nav>    
+
+    <div class="main-content">
+        <div class="container-form">
+            <h1 class="form-title">고객 데이터 관리</h1>
+            <form id="customerForm">
+                <div class="form-section">
+                    <h2 class="section-title">기본 정보</h2>
+                    <div class="form-group">
+                        <label for="manager_name">영업 담당자<span class="required-mark">*</span></label>
+                        <input type="text" id="manager_name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="manager_phone">영업 담당자 연락처<span class="required-mark">*</span></label>
+                        <input type="tel" id="manager_phone" required pattern="[0-9]{2,3}-[0-9]{3,4}-[0-9]{4}" placeholder="예: 010-1234-5678">
+                    </div>
+                    <div class="form-group">
+                        <label for="store_name">매장명<span class="required-mark">*</span></label>
+                        <input type="text" id="store_name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="owner_name">사장님 성함<span class="required-mark">*</span></label>
+                        <input type="text" id="owner_name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">사장님 연락처<span class="required-mark">*</span></label>
+                        <input type="tel" id="phone" required pattern="[0-9]{2,3}-[0-9]{3,4}-[0-9]{4}" placeholder="예: 010-1234-5678">
+                    </div>
+                    <div class="form-group">
+                        <label for="email">사장님 이메일<span class="required-mark">*</span></label>
+                        <input type="email" id="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="business_number">사업자 번호<span class="required-mark">*</span></label>
+                        <input type="text" id="business_number" required pattern="[0-9]{3}-[0-9]{2}-[0-9]{5}" placeholder="예: 123-45-67890">
+                    </div>
+                    <div class="form-group">
+                        <label for="business_address">사업자 주소<span class="required-mark">*</span></label>
+                        <input type="text" id="business_address" required>
+                    </div>
+                </div>
+
+                <!-- 플랫폼 정보 섹션 -->
+                <div class="form-section">
+                    <h2 class="section-title">플랫폼 정보</h2>
+                    <div class="platform-section">
+                        <h3 class="platform-title">배달의민족</h3>
+                        <div class="platform-grid">
+                            <div class="form-group">
+                                <label for="baemin_id">아이디</label>
+                                <input type="text" id="baemin_id">
+                            </div>
+                            <div class="form-group">
+                                <label for="baemin_pw">비밀번호</label>
+                                <input type="password" id="baemin_pw">
+                            </div>
+                            <div class="form-group">
+                                <label for="baemin_code">배민 코드</label>
+                                <input type="text" id="baemin_code">
+                            </div>
+                            <div class="form-group">
+                                <label for="baemin1_code">배민1 코드</label>
+                                <input type="text" id="baemin1_code">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 다른 플랫폼들... -->
+                    <div class="platform-section">
+                        <h3 class="platform-title">쿠팡이츠</h3>
+                        <div class="platform-grid">
+                            <div class="form-group">
+                                <label for="coupang_id">아이디</label>
+                                <input type="text" id="coupang_id">
+                            </div>
+                            <div class="form-group">
+                                <label for="coupang_pw">비밀번호</label>
+                                <input type="password" id="coupang_pw">
+                            </div>
+                            <div class="form-group">
+                                <label for="coupang_code">매장 코드</label>
+                                <input type="text" id="coupang_code">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="platform-section">
+                        <h3 class="platform-title">요기요</h3>
+                        <div class="platform-grid">
+                            <div class="form-group">
+                                <label for="yogiyo_id">아이디</label>
+                                <input type="text" id="yogiyo_id">
+                            </div>
+                            <div class="form-group">
+                                <label for="yogiyo_pw">비밀번호</label>
+                                <input type="password" id="yogiyo_pw">
+                            </div>
+                            <div class="form-group">
+                                <label for="yogiyo_code">매장 코드</label>
+                                <input type="text" id="yogiyo_code">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-button">저장하기</button>
+            </form>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+    const userInfo = JSON.parse(sessionStorage.getItem('userInfo')); // 사용자 정보를 세션에서 가져옴
+    const navMenu = document.getElementById('navMenu'); // 네비게이션 메뉴 엘리먼트
+
+    if (!userInfo) {
+        window.location.href = 'login.html'; // 사용자 정보가 없으면 로그인 페이지로 리다이렉트
+    } else {
+        setupMenuByRole(userInfo.role); // 사용자의 역할에 따라 메뉴 설정
+    }
+
+    function setupMenuByRole(role) {
+        let links = `<a href="index.html" class="nav-link">리뷰 모아보기</a>`; // 기본적으로 모든 역할에 '리뷰 모아보기' 메뉴는 표시
+
+        switch(role) {
+            case 'webmaster':
+                links += `
+                    <a href="customer Data.html" class="nav-link">고객 데이터 관리</a>
+                    <a href="error_logs.html" class="nav-link">에러 로그</a>
+                `;
+                break;
+            case 'admin':
+                links += `<a href="customer Data.html" class="nav-link">고객 데이터 관리</a>`;
+                break;
+            case 'franchise':
+                // 프랜차이즈 사용자에게는 추가 메뉴 없음
+                break;
+            case 'owner':
+                // 점주에게는 추가 메뉴 없음
+                break;
+        }
+
+        navMenu.innerHTML = links; // 네비게이션 메뉴 업데이트
+    }
+});
+
+    </script>
+    <script src="/js/customerData.js"></script>
+</body>
+</html>

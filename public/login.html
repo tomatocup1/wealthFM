@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>로그인 - 부의 정석</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #FFFAF0;
+        }
+
+        .login-container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .login-header h1 {
+            color: #1b2024;
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #1b2024;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #1b2024;
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 14px;
+            background-color: #1b2024;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: opacity 0.3s;
+        }
+
+        .login-button:hover {
+            opacity: 0.9;
+        }
+
+        .links-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            font-size: 14px;
+        }
+
+        .links-container a {
+            color: #666;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .links-container a:hover {
+            color: #1b2024;
+        }
+
+        .error-message {
+            color: #ff4444;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        /* 로딩 스피너 스타일 */
+        .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #1b2024;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <h1>부의 정석 로그인</h1>
+        </div>
+        
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="userId">아이디</label>
+                <input type="text" id="userId" name="userId" required>
+                <div class="error-message" id="userIdError"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">비밀번호</label>
+                <input type="password" id="password" name="password" required>
+                <div class="error-message" id="passwordError"></div>
+            </div>
+            
+            <button type="submit" class="login-button">
+                <span id="loginText">로그인</span>
+                <div class="spinner" id="loginSpinner"></div>
+            </button>
+            
+            <div class="links-container">
+                <a href="find-id.html">아이디 찾기</a>
+                <a href="find-password.html">비밀번호 찾기</a>
+                <a href="signup.html">가입문의</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Supabase 초기화
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+        // 유틸리티 함수들
+        function showError(elementId, message) {
+            const errorElement = document.getElementById(elementId);
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+        }
+
+        function hideError(elementId) {
+            document.getElementById(elementId).style.display = 'none';
+        }
+
+        function setLoading(isLoading) {
+            const loginButton = document.querySelector('.login-button');
+            const loginText = document.getElementById('loginText');
+            const loginSpinner = document.getElementById('loginSpinner');
+            
+            loginButton.disabled = isLoading;
+            loginText.style.display = isLoading ? 'none' : 'block';
+            loginSpinner.style.display = isLoading ? 'block' : 'none';
+        }
+
+        // 로그인 처리
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // 에러 메시지 초기화
+            hideError('userIdError');
+            hideError('passwordError');
+            
+            const userId = document.getElementById('userId').value;
+            const password = document.getElementById('password').value;
+
+            // 입력값 검증
+            if (!userId) {
+                showError('userIdError', '아이디를 입력해주세요.');
+                return;
+            }
+            if (!password) {
+                showError('passwordError', '비밀번호를 입력해주세요.');
+                return;
+            }
+
+            // 로딩 상태 시작
+            setLoading(true);
+
+            try {
+                // 로그인 시도
+                const { data, error } = await supabase
+                    .from('login_data')
+                    .select('*')
+                    .eq('user_id', userId)
+                    .eq('password_hash', password)  // 실제로는 암호화된 비밀번호를 사용해야 합니다
+                    .single();
+
+                if (error || !data) {
+                    showError('passwordError', '아이디 또는 비밀번호가 올바르지 않습니다.');
+                    return;
+                }
+
+                // 로그인 성공 처리
+                sessionStorage.setItem('userInfo', JSON.stringify({
+                    id: data.id,
+                    role: data.role,
+                    storeName: data.store_name,
+                    storeCode: data.store_code,
+                    name: data.full_name
+                }));
+
+                // 메인 페이지로 리다이렉트
+                window.location.href = 'layout.html';
+                
+            } catch (error) {
+                console.error('로그인 오류:', error);
+                showError('passwordError', '로그인 중 오류가 발생했습니다.');
+            } finally {
+                setLoading(false);
+            }
+        });
+
+        // 페이지 로드 시 이전 로그인 세션 확인
+        document.addEventListener('DOMContentLoaded', function() {
+            const userInfo = sessionStorage.getItem('userInfo');
+            if (userInfo) {
+                window.location.href = 'layout.html';
+            }
+        });
+    </script>
+</body>
+</html>
