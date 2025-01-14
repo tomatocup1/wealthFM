@@ -155,12 +155,9 @@
     <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="module">
-        // Supabase 초기화
-        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-        const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        import { loginUser, checkSession } from './js/auth.js';
 
-        // 유틸리티 함수들
+        // UI 관련 유틸리티 함수
         function showError(elementId, message) {
             const errorElement = document.getElementById(elementId);
             errorElement.textContent = message;
@@ -181,7 +178,7 @@
             loginSpinner.style.display = isLoading ? 'block' : 'none';
         }
 
-        // 로그인 처리
+        // 로그인 폼 이벤트 핸들러
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -206,31 +203,16 @@
             setLoading(true);
 
             try {
-                // 로그인 시도
-                const { data, error } = await supabase
-                    .from('login_data')
-                    .select('*')
-                    .eq('user_id', userId)
-                    .eq('password_hash', password)  // 실제로는 암호화된 비밀번호를 사용해야 합니다
-                    .single();
-
-                if (error || !data) {
-                    showError('passwordError', '아이디 또는 비밀번호가 올바르지 않습니다.');
-                    return;
-                }
-
-                // 로그인 성공 처리
-                sessionStorage.setItem('userInfo', JSON.stringify({
-                    id: data.id,
-                    role: data.role,
-                    storeName: data.store_name,
-                    storeCode: data.store_code,
-                    name: data.full_name
-                }));
-
-                // 메인 페이지로 리다이렉트
-                window.location.href = 'layout.html';
+                const result = await loginUser(userId, password);
                 
+                if (result.success) {
+                    // 세션 저장
+                    sessionStorage.setItem('userInfo', JSON.stringify(result.user));
+                    // 메인 페이지로 리다이렉트
+                    window.location.href = 'layout.html';
+                } else {
+                    showError('passwordError', '아이디 또는 비밀번호가 올바르지 않습니다.');
+                }
             } catch (error) {
                 console.error('로그인 오류:', error);
                 showError('passwordError', '로그인 중 오류가 발생했습니다.');
@@ -239,9 +221,9 @@
             }
         });
 
-        // 페이지 로드 시 이전 로그인 세션 확인
+        // 페이지 로드 시 세션 확인
         document.addEventListener('DOMContentLoaded', function() {
-            const userInfo = sessionStorage.getItem('userInfo');
+            const userInfo = checkSession();
             if (userInfo) {
                 window.location.href = 'layout.html';
             }
