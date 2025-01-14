@@ -1,6 +1,10 @@
 // customerData.js
 import { createClient } from '@supabase/supabase-js';
 
+// 환경변수 사용 전 로그로 확인
+console.log('SUPABASE URL:', import.meta.env.VITE_SUPABASE_URL);
+console.log('SUPABASE KEY:', import.meta.env.VITE_SUPABASE_ANON_KEY);
+
 // Supabase 클라이언트 초기화
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -95,7 +99,16 @@ function validateRequiredFields(data) {
         'business_address'
     ];
 
-    const missingFields = requiredFields.filter(field => !data[field]);
+    // 디버깅을 위한 로그 추가
+    console.log('Validating fields:', data);
+
+    const missingFields = requiredFields.filter(field => {
+        const isEmpty = !data[field];
+        if (isEmpty) {
+            console.log(`Missing field: ${field}`);
+        }
+        return isEmpty;
+    });
     
     if (missingFields.length > 0) {
         throw new Error(`다음 필수 항목을 입력해주세요:\n${missingFields.join('\n')}`);
@@ -108,6 +121,12 @@ function setupFormHandler() {
         e.preventDefault();
         
         try {
+            // 입력값 디버깅
+            const formData = new FormData(this);
+            for (let [key, value] of formData.entries()) {
+                console.log(`${key}: ${value}`);
+            }
+
             // 새로운 매장 코드 생성
             const newStoreCode = await generateStoreCode();
             console.log('New store code:', newStoreCode);
@@ -115,23 +134,32 @@ function setupFormHandler() {
             // 폼 데이터 수집
             const { loginData, customerData } = collectFormData(newStoreCode);
 
+            // 데이터 유효성 검사 전 로그
+            console.log('Login Data:', loginData);
+            console.log('Customer Data:', customerData);
+
             // 필수 필드 검증
             validateRequiredFields(loginData);
 
-            // login_data 테이블에 데이터 저장
+            // Supabase 연결 상태 확인
+            const { data, error } = await supabase.from('login_data').select('count').single();
+            if (error) {
+                console.error('Supabase connection error:', error);
+                throw new Error('데이터베이스 연결에 실패했습니다.');
+            }
+
+            // 데이터 저장
             const { error: loginError } = await supabase
                 .from('login_data')
                 .insert([loginData]);
 
             if (loginError) throw loginError;
 
-            // customer_data 테이블에 데이터 저장
             const { error: customerError } = await supabase
                 .from('customer_data')
                 .insert([customerData]);
 
             if (customerError) {
-                // customer_data 저장 실패시 login_data 롤백
                 await supabase
                     .from('login_data')
                     .delete()
