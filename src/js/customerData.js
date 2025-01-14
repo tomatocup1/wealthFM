@@ -49,10 +49,14 @@ function generateDefaultPassword() {
 
 // 폼 데이터 수집 함수
 function collectFormData(storeCode) {
+    // 폼 입력값 직접 로깅
+    console.log('owner_name value:', document.getElementById('owner_name').value);
+
     // login_data 테이블용 데이터
     const loginData = {
         store_code: storeCode,
         store_name: document.getElementById('store_name').value,
+        owner_name: document.getElementById('owner_name').value, // owner_name 추가        
         full_name: document.getElementById('owner_name').value,
         user_id: document.getElementById('email').value.split('@')[0],
         password_hash: generateDefaultPassword(),
@@ -70,6 +74,7 @@ function collectFormData(storeCode) {
     const customerData = {
         store_code: storeCode,
         store_name: document.getElementById('store_name').value,
+        owner_name: document.getElementById('owner_name').value, // owner_name 추가
         baemin_id: document.getElementById('baemin_id').value,
         baemin_pw: document.getElementById('baemin_pw').value,
         coupang_id: document.getElementById('coupang_id').value,
@@ -82,7 +87,10 @@ function collectFormData(storeCode) {
         coupang_code: document.getElementById('coupang_code').value,
         yogiyo_code: document.getElementById('yogiyo_code').value
     };
-
+    // 데이터가 제대로 수집되었는지 확인
+    console.log('Collected login data:', loginData);
+    console.log('Collected customer data:', customerData);
+    
     return { loginData, customerData };
 }
 
