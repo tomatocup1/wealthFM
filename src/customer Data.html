@@ -167,7 +167,7 @@
             }
         }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" type="module"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/js/scripts.js" type="module"></script>
 </head>
 <body>
@@ -333,6 +333,9 @@
 });
 
     </script>
-    <script src="/js/customerData.js" type="module"></script>
+    <script type="module">
+        import { setupFormHandler } from '/js/customerData.js';
+        document.addEventListener('DOMContentLoaded', setupFormHandler);
+    </script>   
 </body>
 </html>

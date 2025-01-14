@@ -1,4 +1,5 @@
 // customerData.js
+import { createClient } from '@supabase/supabase-js';
 
 // Supabase 클라이언트 초기화
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
