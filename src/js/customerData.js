@@ -1,34 +1,19 @@
-let supabaseClient;
+// customerData.js
 
-// Supabase 초기화 함수
-async function initSupabase() {
-    try {
-        // localhost:3000/config로 요청
-        const response = await fetch('http://localhost:3000/config');
-        if (!response.ok) throw new Error('Failed to fetch config');
-        
-        const config = await response.json();
-        console.log('Config loaded:', config);
+// Supabase 클라이언트 초기화
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-        // Supabase 클라이언트 초기화
-        supabaseClient = supabase.createClient(config.SUPABASE_URL, config.SUPABASE_KEY);
-        console.log('Supabase initialized successfully');
-        
-        // 초기화 완료 후 폼 이벤트 리스너 등록
-        setupFormHandler();
-    } catch (error) {
-        console.error('Failed to initialize Supabase:', error);
-    }
+if (!supabaseUrl || !supabaseKey) {
+    throw new Error('Missing Supabase environment variables');
 }
+
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 // 매장 코드 생성 함수
 async function generateStoreCode() {
-    if (!supabaseClient) {
-        throw new Error('Supabase is not initialized');
-    }
-
     try {
-        const { data, error } = await supabaseClient
+        const { data, error } = await supabase
             .from('customer_data')
             .select('store_code')
             .order('store_code', { ascending: false })
@@ -64,15 +49,15 @@ function collectFormData(storeCode) {
         store_code: storeCode,
         store_name: document.getElementById('store_name').value,
         full_name: document.getElementById('owner_name').value,
-        user_id: document.getElementById('email').value.split('@')[0], // 이메일에서 아이디 부분만 추출
-        password_hash: generateDefaultPassword(), // 실제 환경에서는 암호화 필요
+        user_id: document.getElementById('email').value.split('@')[0],
+        password_hash: generateDefaultPassword(),
         email: document.getElementById('email').value,
         phone: document.getElementById('phone').value,
         business_number: document.getElementById('business_number').value,
         business_address: document.getElementById('business_address').value,
         manager_name: document.getElementById('manager_name').value,
         manager_phone: document.getElementById('manager_phone').value,
-        role: 'owner', // 기본값 설정
+        role: 'owner',
         created_at: new Date().toISOString()
     };
 
@@ -122,10 +107,6 @@ function setupFormHandler() {
         e.preventDefault();
         
         try {
-            if (!supabaseClient) {
-                throw new Error('Supabase is not initialized');
-            }
-
             // 새로운 매장 코드 생성
             const newStoreCode = await generateStoreCode();
             console.log('New store code:', newStoreCode);
@@ -137,20 +118,20 @@ function setupFormHandler() {
             validateRequiredFields(loginData);
 
             // login_data 테이블에 데이터 저장
-            const { error: loginError } = await supabaseClient
+            const { error: loginError } = await supabase
                 .from('login_data')
                 .insert([loginData]);
 
             if (loginError) throw loginError;
 
             // customer_data 테이블에 데이터 저장
-            const { error: customerError } = await supabaseClient
+            const { error: customerError } = await supabase
                 .from('customer_data')
                 .insert([customerData]);
 
             if (customerError) {
                 // customer_data 저장 실패시 login_data 롤백
-                await supabaseClient
+                await supabase
                     .from('login_data')
                     .delete()
                     .match({ store_code: newStoreCode });
@@ -167,5 +148,12 @@ function setupFormHandler() {
     });
 }
 
-// 페이지 로드 시 Supabase 초기화
-document.addEventListener('DOMContentLoaded', initSupabase);
+// 페이지 로드 시 이벤트 리스너 등록
+document.addEventListener('DOMContentLoaded', setupFormHandler);
+
+// 모듈 내보내기
+export {
+    setupFormHandler,
+    generateStoreCode,
+    validateRequiredFields
+};
