@@ -1,12 +1,39 @@
 require('dotenv').config();
 const express = require('express');
-const fetch = require('node-fetch');
+const fetch = require('node-fetch'); // node-fetch@2 사용
+const path = require('path');
+const cors = require('cors'); // cors 불러오기
 
 const app = express();
+
+// CORS 설정: 모든 도메인에서의 접근을 허용 (개발 단계에서만 권장)
+app.use(cors());
+
 app.use(express.json());
 app.use(express.static('public'));
 
-// Generate Reply Endpoint
+// 환경변수를 클라이언트에 제공하는 엔드포인트 추가
+app.get('/config', (req, res) => {
+  res.json({
+    SUPABASE_URL: process.env.VITE_SUPABASE_URL,
+    SUPABASE_KEY: process.env.VITE_SUPABASE_ANON_KEY
+  });
+});
+
+// HTML 파일들에 대한 라우트 추가
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.get('/layout', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'layout.html'));
+});
+
+app.get('/customer-data', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'customer Data.html'));
+});
+
+// 기존 앤드포인트 Generate Reply Endpoint
 app.post('/generate-reply', async (req, res) => {
   const { nickname, rating, menu, review } = req.body;
 
@@ -42,7 +69,7 @@ app.post('/generate-reply', async (req, res) => {
         Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini', // OpenAI 모델 설정
+        model: 'gpt-4', // 올바른 OpenAI 모델 이름 사용
         messages: [
           { role: 'system', content: systemInstruction }, // 시스템 역할 추가
           { role: 'user', content: prompt }, // 사용자 요청
@@ -71,7 +98,7 @@ app.post('/generate-reply', async (req, res) => {
 });
 
 // 서버 실행
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running at http://localhost:${PORT}`);
 });

@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>고객 데이터 관리 - 부의 정석</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #FFFAF0;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .form-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 30px;
+            color: #1b2024;
+        }
+
+        .form-section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #1b2024;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .form-group {
+            margin-bottom: 20px;  /* 모든 폼 그룹의 아래 마진을 20px로 통일 */
+        }
+
+        .form-section {
+            margin-bottom: 40px;  /* 섹션 사이의 간격은 40px로 설정 */
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #1b2024;
+            font-weight: 500;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #1b2024;
+        }
+
+        input::placeholder, textarea::placeholder {
+            color: #aaa;
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .platform-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .platform-title {
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #1b2024;
+        }
+
+        .platform-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .submit-button {
+            background-color: #1b2024;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .submit-button:hover {
+            opacity: 0.9;
+        }
+
+        .required-mark {
+            color: #ff4444;
+            margin-left: 4px;
+        }
+
+        .readonly-input {
+            background-color: #f5f5f5;
+            cursor: not-allowed;
+        }
+
+        @media (max-width: 768px) {
+            .platform-grid {
+                grid-template-columns: 1fr;
+            }
+
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    
+    <div class="container">
+        <h1 class="form-title">고객 데이터 관리</h1>
+        <form id="customerForm">
+            <div class="form-section">
+                <h2 class="section-title">기본 정보</h2>
+                <div class="form-group">
+                    <label for="manager_name">영업 담당자<span class="required-mark">*</span></label>
+                    <input type="text" id="manager_name" required>
+                </div>
+                <div class="form-group">
+                    <label for="manager_phone">영업 담당자 연락처<span class="required-mark">*</span></label>
+                    <input type="tel" id="manager_phone" required pattern="[0-9]{2,3}-[0-9]{3,4}-[0-9]{4}" placeholder="예: 010-1234-5678">
+                </div>
+                    <div class="form-group">
+                    <label for="store_name">매장명<span class="required-mark">*</span></label>
+                    <input type="text" id="store_name" required>
+                </div>
+                <div class="form-group">
+                    <label for="owner_name">사장님 성함<span class="required-mark">*</span></label>
+                    <input type="text" id="owner_name" required>
+                </div>
+                <div class="form-group">
+                    <label for="phone">사장님 연락처<span class="required-mark">*</span></label>
+                    <input type="tel" id="phone" required pattern="[0-9]{2,3}-[0-9]{3,4}-[0-9]{4}" placeholder="예: 010-1234-5678">
+                </div>
+                <div class="form-group">
+                    <label for="email">사장님 이메일<span class="required-mark">*</span></label>
+                    <input type="email" id="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="business_number">사업자 번호<span class="required-mark">*</span></label>
+                    <input type="text" id="business_number" required pattern="[0-9]{3}-[0-9]{2}-[0-9]{5}" placeholder="예: 123-45-67890">
+                </div>
+                <div class="form-group">
+                    <label for="business_address">사업자 주소<span class="required-mark">*</span></label>
+                    <input type="text" id="business_address" required>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2 class="section-title">플랫폼 정보</h2>
+                <div class="platform-section">
+                    <h3 class="platform-title">배달의민족</h3>
+                    <div class="platform-grid">
+                        <div class="form-group">
+                            <label for="baemin_id">아이디</label>
+                            <input type="text" id="baemin_id">
+                        </div>
+                        <div class="form-group">
+                            <label for="baemin_pw">비밀번호</label>
+                            <input type="password" id="baemin_pw">
+                        </div>
+                        <div class="form-group">
+                            <label for="baemin_code">배민 코드</label>
+                            <input type="text" id="baemin_code">
+                        </div>
+                        <div class="form-group">
+                            <label for="baemin1_code">배민1 코드</label>
+                            <input type="text" id="baemin1_code">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="platform-section">
+                    <h3 class="platform-title">쿠팡이츠</h3>
+                    <div class="platform-grid">
+                        <div class="form-group">
+                            <label for="coupang_id">아이디</label>
+                            <input type="text" id="coupang_id">
+                        </div>
+                        <div class="form-group">
+                            <label for="coupang_pw">비밀번호</label>
+                            <input type="password" id="coupang_pw">
+                        </div>
+                        <div class="form-group">
+                            <label for="coupang_code">매장 코드</label>
+                            <input type="text" id="coupang_code">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="platform-section">
+                    <h3 class="platform-title">요기요</h3>
+                    <div class="platform-grid">
+                        <div class="form-group">
+                            <label for="yogiyo_id">아이디</label>
+                            <input type="text" id="yogiyo_id">
+                        </div>
+                        <div class="form-group">
+                            <label for="yogiyo_pw">비밀번호</label>
+                            <input type="password" id="yogiyo_pw">
+                        </div>
+                        <div class="form-group">
+                            <label for="yogiyo_code">매장 코드</label>
+                            <input type="text" id="yogiyo_code">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2 class="section-title">답변 설정</h2>
+                <div class="form-group">
+                    <label for="greeting_start">인사말 시작</label>
+                    <input type="text" id="greeting_start" placeholder="예시: 안녕하세요! '이름 님'">
+                </div>
+                <div class="form-group">
+                    <label for="greeting_end">인사말 끝</label>
+                    <input type="text" id="greeting_end" placeholder="예시: 맛있는 한 끼로 행복을 전하는 왓더버거 원주점이었습니다.">
+                </div>
+                <div class="form-group">
+                    <label for="role">역할</label>
+                    <textarea id="role">유쾌한 가게 사장님으로 '이름','별점','리뷰' 를 보고 고객을 생각하는 느낌을 주도록 text로만 리뷰를 작성,</textarea>
+                </div>
+                <div class="form-group">
+                    <label for="tone">톤앤매너</label>
+                    <textarea id="tone">한국 아나운서의 부드럽고 친절한 톤으로 진실되고 감사하는 어조를 유지.목표는 리뷰가 긍정적이든 부정적이든 관계없이 고객이 진정으로 가치있고 경청되었다고 느끼게 하는 것.</textarea>
+                </div>
+                <div class="form-group">
+                    <label for="prohibited_words">금지어</label>
+                    <textarea id="prohibited_words">매우', '레스토랑', '셰프', '유감', '방문', '안타</textarea>
+                </div>
+                <div class="form-group">
+                    <label for="max_length">최대 글자수</label>
+                    <input type="number" id="max_length" value="350" class="readonly-input" readonly>
+                </div>
+            </div>
+
+            <button type="submit" class="submit-button">저장하기</button>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const { createClient } = supabase;
+
+        let supabaseClient;
+
+        // Supabase 초기화 함수
+        async function initSupabase() {
+            try {
+                // localhost:3000/config로 요청
+                const response = await fetch('http://localhost:3000/config');
+                if (!response.ok) throw new Error('Failed to fetch config');
+                
+                const config = await response.json();
+                console.log('Config loaded:', config);
+
+                // Supabase 클라이언트 초기화
+                supabaseClient = createClient(config.SUPABASE_URL, config.SUPABASE_KEY);
+                console.log('Supabase initialized successfully');
+                
+                // 초기화 완료 후 폼 이벤트 리스너 등록
+                setupFormHandler();
+            } catch (error) {
+                console.error('Failed to initialize Supabase:', error);
+            }
+        }
+
+        // 매장 코드 생성 함수
+        async function generateStoreCode() {
+            if (!supabaseClient) {
+                throw new Error('Supabase is not initialized');
+            }
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('customer_data')
+                    .select('store_code')
+                    .order('store_code', { ascending: false })
+                    .limit(1);
+
+                if (error) throw error;
+
+                let newCode;
+                if (data && data.length > 0) {
+                    const lastCode = data[0].store_code;
+                    const lastNumber = parseInt(lastCode.substring(3));
+                    newCode = 'AAA' + String(lastNumber + 1).padStart(4, '0');
+                } else {
+                    newCode = 'AAA0001';
+                }
+                
+                console.log('Generated store code:', newCode);
+                return newCode;
+            } catch (error) {
+                console.error('매장 코드 생성 오류:', error);
+                throw error;
+            }
+        }
+
+        // 폼 제출 핸들러
+        function setupFormHandler() {
+            document.getElementById('customerForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                try {
+                    if (!supabaseClient) {
+                        throw new Error('Supabase is not initialized');
+                    }
+
+                    const newStoreCode = await generateStoreCode();
+                    console.log('New store code:', newStoreCode);
+
+                    // 폼 데이터 수집
+                    const formData = {
+                        store_code: newStoreCode,
+                        store_name: document.getElementById('store_name').value,
+                        owner_name: document.getElementById('owner_name').value,
+                        manager_name: document.getElementById('manager_name').value,
+                        manager_phone: document.getElementById('manager_phone').value,
+                        phone: document.getElementById('phone').value,
+                        email: document.getElementById('email').value,
+                        business_number: document.getElementById('business_number').value,
+                        business_address: document.getElementById('business_address').value,
+                        // ... 나머지 필드들
+                    };
+
+                    // 필수 필드 검증
+                    const requiredFields = [
+                        'store_name', 'owner_name', 'manager_name', 
+                        'manager_phone', 'phone', 'email', 
+                        'business_number', 'business_address'
+                    ];
+
+                    const missingFields = requiredFields.filter(field => !formData[field]);
+                    if (missingFields.length > 0) {
+                        alert(`다음 필수 항목을 입력해주세요:\n${missingFields.join('\n')}`);
+                        return;
+                    }
+
+                    // 데이터베이스에 저장
+                    const { error: customerError } = await supabaseClient
+                        .from('customer_data')
+                        .insert([formData]);
+
+                    if (customerError) throw customerError;
+
+                    alert('매장이 성공적으로 등록되었습니다.\n매장 코드: ' + newStoreCode);
+                    window.location.reload();
+
+                } catch (error) {
+                    console.error('전체 저장 오류:', error);
+                    alert(`저장 중 오류가 발생했습니다: ${error.message}`);
+                }
+            });
+        }
+
+        // 페이지 로드 시 Supabase 초기화
+        document.addEventListener('DOMContentLoaded', initSupabase);
+    </script>
+
+</body>
+</html>
