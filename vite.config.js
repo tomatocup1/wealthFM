@@ -2,29 +2,32 @@ import { defineConfig } from 'vite'
 import { resolve } from 'path'
 
 export default defineConfig({
-  root: 'src',
   build: {
-    outDir: '../dist',
-    emptyOutDir: true,
     rollupOptions: {
       input: {
-        main: resolve(__dirname, 'src/index.html'),
-        login: resolve(__dirname, 'src/login.html'),
-        layout: resolve(__dirname, 'src/layout.html'),
-        customerData: resolve(__dirname, 'src/customer Data.html'),
-        errorLogs: resolve(__dirname, 'src/error_logs.html'),
-        adminManagement: resolve(__dirname, 'src/adminManagement.html'),
-        privacyPolicy: resolve(__dirname, 'src/privacy-policy.html'),
-        webmasterRegistration: resolve(__dirname, 'src/webmasterRegistration.html')
+        main: resolve(__dirname, 'index.html'),
+        login: resolve(__dirname, 'login.html'),
+        layout: resolve(__dirname, 'layout.html'),
+        customerData: resolve(__dirname, 'customer_data.html'),  // 파일명 변경
+        errorLogs: resolve(__dirname, 'error_logs.html'),
+        adminManagement: resolve(__dirname, 'adminManagement.html'),
+        privacyPolicy: resolve(__dirname, 'privacy-policy.html'),
+        webmasterRegistration: resolve(__dirname, 'webmasterRegistration.html')
       }
+    },
+    outDir: 'dist',
+    assetsDir: 'assets'
+  },
+  resolve: {
+    alias: {
+      '@': resolve(__dirname, 'src')
     }
   },
   server: {
     port: 3000
   },
-  publicDir: 'public',
   define: {
-    'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(process.env.VITE_SUPABASE_URL),
-    'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(process.env.VITE_SUPABASE_ANON_KEY)
+    'process.env.VITE_SUPABASE_URL': JSON.stringify(process.env.VITE_SUPABASE_URL),
+    'process.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(process.env.VITE_SUPABASE_ANON_KEY)
   }
-});
+})

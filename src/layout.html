@@ -304,7 +304,7 @@
         switch(role) {
             case 'webmaster':
                 navMenu.innerHTML += `
-                    <a href="customer Data.html" class="nav-link">고객 데이터 관리</a>
+                    <a href="customer_data.html" class="nav-link">고객 데이터 관리</a>
                     <a href="error_logs.html" class="nav-link">에러 로그</a>
                 `;
                 storeSelectContainer.style.display = 'block';
@@ -312,7 +312,7 @@
                 break;
             case 'admin':
                 navMenu.innerHTML += `
-                    <a href="customer Data.html" class="nav-link">고객 데이터 관리</a>
+                    <a href="customer_data.html" class="nav-link">고객 데이터 관리</a>
                 `;
                 storeSelectContainer.style.display = 'block';
                 loadAssignedStores();
@@ -446,7 +446,7 @@ async function loadSingleStore() {
                 case 'webmaster':
                 case 'admin':
                     navMenu.innerHTML += `
-                        <a href="customer Data.html" class="nav-link">고객 데이터 관리</a>
+                        <a href="customer_data.html" class="nav-link">고객 데이터 관리</a>
                         <a href="error_logs.html" class="nav-link">에러 로그</a>
                     `;
                     loadStores(role);
@@ -648,7 +648,7 @@ async function loadSingleStore() {
             // 웹마스터와 관리자일 경우 추가 메뉴 표시
             if (role === 'webmaster' || role === 'admin') {
                 navMenu.innerHTML += `
-                    <a href="customer Data.html" class="nav-link">고객 데이터 관리</a>
+                    <a href="customer_data.html" class="nav-link">고객 데이터 관리</a>
                     <a href="error_logs.html" class="nav-link">에러 로그</a>
                 `;
             }
