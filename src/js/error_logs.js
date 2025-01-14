@@ -6,6 +6,43 @@ const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 const supabase = createClient(supabaseUrl, supabaseKey)
 
+// error_logs.js 파일 상단에 추가
+function generateCalendar() {
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+    
+    const firstDay = new Date(currentYear, currentMonth, 1);
+    const lastDay = new Date(currentYear, currentMonth + 1, 0);
+    
+    const calendarBody = document.getElementById('calendarBody');
+    let date = 1;
+    let html = '';
+
+    // 달력 생성
+    for (let i = 0; i < 6; i++) {
+        html += '<tr>';
+        for (let j = 0; j < 7; j++) {
+            if (i === 0 && j < firstDay.getDay()) {
+                html += '<td></td>';
+            } else if (date > lastDay.getDate()) {
+                html += '<td></td>';
+            } else {
+                const isToday = date === today.getDate();
+                html += `<td class="${isToday ? 'today' : ''}" data-date="${date}">${date}</td>`;
+                date++;
+            }
+        }
+        html += '</tr>';
+        if (date > lastDay.getDate()) break;
+    }
+    
+    calendarBody.innerHTML = html;
+
+    // 날짜 선택 이벤트 설정
+    setupCalendarEvents();
+}
+
 // 에러 로그 조회 함수
 async function fetchLogData(date) {
     try {
@@ -133,4 +170,5 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-export { generateCalendar, fetchLogData, updateLogTable };
+// export 문 수정
+export { generateCalendar, fetchLogData, updateLogTable, setupCalendarEvents };
