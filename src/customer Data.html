@@ -82,7 +82,7 @@
         .container-form {
             max-width: 800px;
             margin: 0 auto;
-            background: white;
+            background: #FFFAF0;
             padding: 30px;
             border-radius: 15px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
@@ -192,7 +192,10 @@
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="/js/scripts.js" type="module"></script>
+  <script type="module" crossorigin src="/assets/customerData-C_MJILHU.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/modulepreload-polyfill-B5Qt9EMX.js">
+  <link rel="modulepreload" crossorigin href="/assets/scripts-DQErhuYF.js">
+  <link rel="modulepreload" crossorigin href="/assets/index-BQfYHZiF.js">
 </head>
 <body>
     <!-- 네비게이션 바 추가 -->
@@ -367,10 +370,6 @@
 });
 
     </script>
-       
-    <script type="module">
-        import { setupFormHandler } from '/js/customerData.js';
-        document.addEventListener('DOMContentLoaded', setupFormHandler);
-    </script>   
+          
 </body>
 </html>
