@@ -202,6 +202,7 @@ function collectFormData(storeCode) {
                 alert(`저장 중 오류가 발생했습니다: ${error.message}`);
             }
         });
+        document.getElementById('checkUserIdBtn').addEventListener('click', checkUserId);
     }
 
 // 페이지 로드 시 이벤트 리스너 등록
@@ -211,5 +212,6 @@ document.addEventListener('DOMContentLoaded', setupFormHandler);
 export {
     setupFormHandler,
     generateStoreCode,
-    validateRequiredFields
+    validateRequiredFields,
+    checkUserId
 };
