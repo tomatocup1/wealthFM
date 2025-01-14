@@ -1,7 +1,9 @@
 import { defineConfig } from 'vite'
 import { resolve } from 'path'
+import react from '@vitejs/plugin-react'  // 추가
 
 export default defineConfig({
+  plugins: [react()],
   root: 'src', // src 디렉토리를 루트로 설정
   build: {
     rollupOptions: {

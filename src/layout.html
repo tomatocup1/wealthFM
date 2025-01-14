@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>단골을 만드는 리뷰 관리의 비법 - 부의 정석</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -15,17 +19,11 @@
             --background-color: #FFFAF0;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
             font-family: 'Arial', sans-serif;
             background-color: var(--background-color);
-            color: var(--text-color);
-            line-height: 1.6;
+            margin: 0;
+            padding: 0;
         }
 
         .navbar {
@@ -86,96 +84,70 @@
 
         .main-content {
             margin-top: 80px;
-            padding: 2rem 0;
-        }
-
-        .reviews-container {
-            background: white;
-            border-radius: 15px;
             padding: 2rem;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            margin-bottom: 2rem;
         }
 
-        .store-select-container {
-            margin: 20px 0;
-            padding: 10px;
-            background: #f8f9fa;
-            border-radius: 8px;
-        }
-        
-        .store-select {
-            width: 100%;
-            max-width: 300px;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 1rem;
-            background: white;
-        }
-        .calendar-stats-container {
-            display: grid;
-            grid-template-columns: 1fr 2fr;
-            gap: 2rem;
-            margin-bottom: 2rem;
+        @media (max-width: 768px) {
+            .nav-menu {
+                display: none;
+            }
         }
 
-        .calendar-card {
-            background: white;
-            border-radius: 15px;
-            padding: 2rem;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-
-        .stats-card {
-            background: white;
-            border-radius: 15px;
-            padding: 2rem;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-
+        /* 통계 카드 스타일 */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             gap: 1rem;
+            margin-bottom: 1.5rem;
         }
 
-        .stat-item {
-            background: #f8f9fa;
+        .stat-card {
+            background: white;
             padding: 1rem;
-            border-radius: 8px;
+            border-radius: 0.5rem;
             text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        .stat-number {
-            font-size: 2em;
-            font-weight: bold;
-            color: var(--heading-color);
-            margin-bottom: 0.5rem;
+        .platform-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
         }
 
-        .stat-label {
-            font-size: 1em;
-            color: var(--text-color);
+        .platform-tab {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .platform-tab.active {
+            background-color: var(--accent-color);
+            color: white;
         }
 
         .calendar {
+            background: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 1.5rem;
+        }
+
+        .calendar table {
             width: 100%;
             border-collapse: collapse;
         }
 
-        .calendar th {
-            padding: 1rem;
+        .calendar th,
+        .calendar td {
+            padding: 0.75rem;
             text-align: center;
-            font-weight: normal;
-            color: var(--text-color);
         }
 
         .calendar td {
-            padding: 1rem;
-            text-align: center;
             cursor: pointer;
-            border-radius: 4px;
         }
 
         .calendar td:hover {
@@ -187,95 +159,12 @@
             color: white;
         }
 
-        .calendar td.today {
-            border: 1px solid var(--accent-color);
-        }
-
-        .review-filter {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1rem;
-            align-items: center;
-        }
-
-        .platform-tabs {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 2rem;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 1rem;
-        }
-
-        .platform-tab {
-            padding: 0.8rem 1.5rem;
-            border: none;
-            background: none;
-            color: var(--text-color);
-            font-family: 'Arial', sans-serif;
-            font-size: 1.1rem;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .platform-tab.active {
-            color: var(--accent-color);
-            border-bottom: 2px solid var(--accent-color);
-        }
-
-        .review-card {
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-            background: #fff;
-        }
-
-        .review-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 1rem;
-            align-items: center;
-        }
-
-        .reviewer {
-            font-weight: bold;
-            font-size: 1.1rem;
-        }
-
-        .review-date {
-            color: #666;
-            font-size: 0.9rem;
-        }
-
-        .review-content {
-            margin-bottom: 1rem;
-            line-height: 1.6;
-        }
-
-        .review-menu {
-            color: #666;
-            font-size: 0.9rem;
-            background: #f8f9fa;
+        .store-select {
+            width: 100%;
             padding: 0.5rem;
-            border-radius: 4px;
-        }
-
-        @media (max-width: 768px) {
-            .nav-menu {
-                display: none;
-            }
-            
-            .calendar-stats-container {
-                grid-template-columns: 1fr;
-            }
-
-            .stats-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
-            
-            .platform-tabs {
-                flex-wrap: wrap;
-            }
+            border: 1px solid #ddd;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
         }
     </style>
 </head>
@@ -543,9 +432,9 @@ async function loadSingleStore() {
         <div class="container nav-content">
             <div class="nav-brand">부의 정석</div>
             <div class="nav-menu" id="navMenu">
-                <a href="#" class="nav-link active">리뷰 모아보기</a>
+                <!-- 메뉴는 JavaScript에서 동적으로 생성됩니다 -->
             </div>
-            <select class="role-select" id="roleSelect">
+            <select class="role-select" id="roleSelect" disabled>
                 <option value="webmaster">웹마스터</option>
                 <option value="admin">관리자</option>
                 <option value="franchise">프렌차이즈</option>
@@ -554,6 +443,53 @@ async function loadSingleStore() {
         </div>
     </nav>
 
+    <main class="main-content">
+        <div id="review-dashboard-root">
+            <!-- React 컴포넌트가 여기에 마운트됩니다 -->
+        </div>
+    </main>
+    
+    <script type="text/babel" src="/js/Review.js"></script>
+    <script type="text/babel">
+        // React 컴포넌트를 마운트합니다
+        const container = document.getElementById('review-dashboard-root');
+        const root = ReactDOM.createRoot(container);
+        root.render(<ReviewDashboard />);
+    </script>
+
+    <script>
+        // 세션 체크 및 메뉴 설정
+        document.addEventListener('DOMContentLoaded', function() {
+            const userInfo = JSON.parse(sessionStorage.getItem('userInfo'));
+            if (!userInfo) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // 역할에 따른 메뉴 설정
+            const roleSelect = document.getElementById('roleSelect');
+            roleSelect.value = userInfo.role;
+
+            // 메뉴 업데이트
+            updateMenuByRole(userInfo.role);
+        });
+
+        function updateMenuByRole(role) {
+            const navMenu = document.getElementById('navMenu');
+            let menuHtml = '<a href="layout.html" class="nav-link active">리뷰 모아보기</a>';
+            
+            if (role === 'webmaster' || role === 'admin') {
+                menuHtml += '<a href="customer_data.html" class="nav-link">고객 데이터 관리</a>';
+            }
+            
+            if (role === 'webmaster') {
+                menuHtml += '<a href="error_logs.html" class="nav-link">에러 로그</a>';
+            }
+            
+            navMenu.innerHTML = menuHtml;
+        }
+    </script>
+    
     <main class="main-content container">
         <div class="calendar-stats-container">
             <div class="calendar-card">
