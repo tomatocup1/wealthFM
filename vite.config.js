@@ -2,26 +2,21 @@ import { defineConfig } from 'vite'
 import { resolve } from 'path'
 
 export default defineConfig({
+  root: 'src', // src 디렉토리를 루트로 설정
   build: {
     rollupOptions: {
       input: {
-        main: resolve(__dirname, 'index.html'),
-        login: resolve(__dirname, 'login.html'),
-        layout: resolve(__dirname, 'layout.html'),
-        customerData: resolve(__dirname, 'customer_data.html'),  // 파일명 변경
-        errorLogs: resolve(__dirname, 'error_logs.html'),
-        adminManagement: resolve(__dirname, 'adminManagement.html'),
-        privacyPolicy: resolve(__dirname, 'privacy-policy.html'),
-        webmasterRegistration: resolve(__dirname, 'webmasterRegistration.html')
+        main: resolve(__dirname, 'src/index.html'),
+        customer_data: resolve(__dirname, 'src/customer_data.html'),
+        error_logs: resolve(__dirname, 'src/error_logs.html'),
+        login: resolve(__dirname, 'src/login.html'),
+        layout: resolve(__dirname, 'src/layout.html'),
+        admin: resolve(__dirname, 'src/adminManagement.html'),
+        privacy: resolve(__dirname, 'src/privacy-policy.html')
       }
     },
-    outDir: 'dist',
-    assetsDir: 'assets'
-  },
-  resolve: {
-    alias: {
-      '@': resolve(__dirname, 'src')
-    }
+    outDir: '../dist', // 빌드 출력 디렉토리를 프로젝트 루트의 dist로 설정
+    emptyOutDir: true
   },
   server: {
     port: 3000
