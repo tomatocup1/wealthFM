@@ -15,10 +15,10 @@ export default defineConfig({
         layout: resolve(__dirname, 'src/layout.html'),
         admin: resolve(__dirname, 'src/adminManagement.html'),
         privacy: resolve(__dirname, 'src/privacy-policy.html'),
-        review: resolve(__dirname, 'src/js/Review.js') // React 컴포넌트 추가
+        review: resolve(__dirname, 'src/js/Review.jsx') // 수정된 경로
       },
       output: {
-        entryFileNames: '[name].js' // React 파일을 구분하기 쉽게 이름 설정
+        entryFileNames: '[name].js' // 빌드된 파일 이름 설정
       }
     },
     outDir: '../dist',
