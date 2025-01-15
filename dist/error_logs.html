@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" type="module"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>에러 로그 - 부의 정석</title>
@@ -14,6 +14,12 @@
             width: 100%;
             top: 0;
             z-index: 1000;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
         }
 
         .nav-content {
@@ -207,7 +213,9 @@
             }
         }
     </style>
-  <script type="module" crossorigin src="/assets/modulepreload-polyfill-B5Qt9EMX.js"></script>
+  <script type="module" crossorigin src="/chunks/modulepreload-polyfill-B5Qt9EMX.js"></script>
+  <script type="module" crossorigin src="/chunks/index-BQfYHZiF.js"></script>
+  <script type="module" crossorigin src="/chunks/error_logs-WwUH5O0A.js"></script>
 </head>
 <body>
     
@@ -221,8 +229,8 @@
         <div class="container nav-content">
             <div class="nav-brand">부의 정석</div>
             <div class="nav-menu" id="navMenu">
-                <a href="#" class="nav-link active">리뷰 모아보기</a>
-                <a href="customer Data.html" class="nav-link">고객 데이터 관리</a>
+                <a href="layout.html" class="nav-link">리뷰 모아보기</a>
+                <a href="customer_data.html" class="nav-link">고객 데이터 관리</a>
                 <a href="error_logs.html" class="nav-link">에러 로그</a>
             </div>
             <select class="role-select" id="roleSelect">
@@ -259,13 +267,13 @@
             <input type="text" 
                    class="search-input" 
                    placeholder="매장명 또는 에러 메시지로 검색">
-            <select class="filter-select">
+            <select class="filter-select" data-filter="platform">
                 <option value="all">전체 플랫폼</option>
                 <option value="배민">배달의민족</option>
                 <option value="쿠팡">쿠팡이츠</option>
                 <option value="요기요">요기요</option>
             </select>
-            <select class="filter-select">
+            <select class="filter-select" data-filter="category">
                 <option value="all">전체 카테고리</option>
                 <option value="오류">오류</option>
                 <option value="답글 실패">답글 실패</option>
@@ -433,10 +441,10 @@
     }
 
     function updateMenuByRole(role) {
-        let links = `<a href="index.html" class="nav-link">리뷰 모아보기</a>`; // 모든 사용자에게 표시
+        let links = `<a href="layout.html" class="nav-link">리뷰 모아보기</a>`; // 모든 사용자에게 표시
 
         if (role === 'webmaster' || role === 'admin') {
-            links += `<a href="customer Data.html" class="nav-link">고객 데이터 관리</a>`;
+            links += `<a href="customer_data.html" class="nav-link">고객 데이터 관리</a>`;
         }
         if (role === 'webmaster') {
             links += `<a href="error_logs.html" class="nav-link">에러 로그</a>`;
