@@ -1,10 +1,10 @@
-import { defineConfig } from 'vite'
-import { resolve } from 'path'
-import react from '@vitejs/plugin-react'  // 추가
+import { defineConfig } from 'vite';
+import { resolve } from 'path';
+import react from '@vitejs/plugin-react';
 
 export default defineConfig({
-  plugins: [react()],  // 추가
-  root: 'src', // src 디렉토리를 루트로 설정
+  plugins: [react()],
+  root: 'src',
   build: {
     rollupOptions: {
       input: {
@@ -14,10 +14,14 @@ export default defineConfig({
         login: resolve(__dirname, 'src/login.html'),
         layout: resolve(__dirname, 'src/layout.html'),
         admin: resolve(__dirname, 'src/adminManagement.html'),
-        privacy: resolve(__dirname, 'src/privacy-policy.html')
+        privacy: resolve(__dirname, 'src/privacy-policy.html'),
+        review: resolve(__dirname, 'src/js/Review.js') // React 컴포넌트 추가
+      },
+      output: {
+        entryFileNames: '[name].js' // React 파일을 구분하기 쉽게 이름 설정
       }
     },
-    outDir: '../dist', // 빌드 출력 디렉토리를 프로젝트 루트의 dist로 설정
+    outDir: '../dist',
     emptyOutDir: true
   },
   server: {
@@ -27,4 +31,4 @@ export default defineConfig({
     'process.env.VITE_SUPABASE_URL': JSON.stringify(process.env.VITE_SUPABASE_URL),
     'process.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(process.env.VITE_SUPABASE_ANON_KEY)
   }
-})
+});
