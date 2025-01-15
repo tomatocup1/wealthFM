@@ -1,7 +1,6 @@
 // src/js/auth.js
-import { supabase } from './supabaseClient.js';  // 경로 수정
+import { supabase } from './supabaseClient.js';
 
-// 로그인 함수
 export async function loginUser(userId, password) {
     try {
         const { data, error } = await supabase
@@ -33,19 +32,52 @@ export async function loginUser(userId, password) {
     }
 }
 
-// 세션 검사 함수
 export function checkSession() {
     const userInfo = sessionStorage.getItem('userInfo');
     return userInfo ? JSON.parse(userInfo) : null;
 }
 
-// 세션 저장 함수
 export function saveSession(userInfo) {
     sessionStorage.setItem('userInfo', JSON.stringify(userInfo));
 }
 
-// 로그아웃 함수
 export function logout() {
     sessionStorage.removeItem('userInfo');
     window.location.href = 'login.html';
+}
+
+// 역할에 따른 메뉴 업데이트 함수
+export function updateMenuByRole(role) {
+    console.log(`현재 역할: ${role}`);
+    const navMenu = document.getElementById('navMenu');
+
+    if (!navMenu) return;
+
+    // 역할별 메뉴 설정
+    let menuHtml = '';
+    switch (role) {
+        case 'admin':
+            menuHtml = `
+                <a href="/dashboard.html" class="nav-link">대시보드</a>
+                <a href="/users.html" class="nav-link">사용자 관리</a>
+            `;
+            break;
+        case 'franchise':
+            menuHtml = `
+                <a href="/stores.html" class="nav-link">가게 관리</a>
+                <a href="/orders.html" class="nav-link">주문 관리</a>
+            `;
+            break;
+        case 'owner':
+            menuHtml = `
+                <a href="/reviews.html" class="nav-link">리뷰</a>
+            `;
+            break;
+        default:
+            menuHtml = `
+                <a href="/home.html" class="nav-link">홈</a>
+            `;
+    }
+
+    navMenu.innerHTML = menuHtml;
 }

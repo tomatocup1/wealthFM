@@ -266,29 +266,28 @@
         </div>
     </main>
 
-        <!-- 리뷰 대시보드 컴포넌트 -->
-        <script type="text/babel" src="/js/Review.js"></script>
-        <script type="text/babel">
-            const container = document.getElementById('review-dashboard-root');
-            const root = ReactDOM.createRoot(container);
-            root.render(<ReviewDashboard />);
-        </script>
+    <!-- React 대시보드 -->
+    <main class="main-content container">
+        <div id="review-dashboard-root"></div>
+    </main>
     
-        <!-- 초기화 스크립트 -->
-        <script type="module">
-            import { checkSession, updateMenuByRole } from './js/auth.js';
-    
-            // 페이지 초기화
-            document.addEventListener('DOMContentLoaded', async () => {
-                const userInfo = checkSession();
-                if (!userInfo) return;
-    
-                const roleSelect = document.getElementById('roleSelect');
-                roleSelect.value = userInfo.role;
-                roleSelect.disabled = true;
-    
-                updateMenuByRole(userInfo.role);
-            });
-        </script>
-        
+    <!-- React 컴포넌트 로드 -->
+    <script type="module" src="/dist/Review.js"></script>
+
+    <!-- 초기화 스크립트 -->
+    <script type="module">
+        import { checkSession, updateMenuByRole } from './dist/auth.js';
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const userInfo = checkSession();
+            if (!userInfo) return;
+
+            const roleSelect = document.getElementById('roleSelect');
+            roleSelect.value = userInfo.role;
+            roleSelect.disabled = true;
+
+            updateMenuByRole(userInfo.role);
+        });
+    </script>
 </body>
+</html>
