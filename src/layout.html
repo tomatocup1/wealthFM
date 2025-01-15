@@ -19,9 +19,10 @@
     <!-- 초기화 스크립트 -->
     <script type="module">
         import { initializePage } from './js/init.js';
-        
-        // 페이지 로드 시 초기화
-        document.addEventListener('DOMContentLoaded', initializePage);
+    
+        document.addEventListener('DOMContentLoaded', () => {
+            initializePage();
+        });
     </script>
 
     <style>
