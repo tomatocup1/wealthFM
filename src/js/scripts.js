@@ -1,84 +1,185 @@
-// Supabase 초기화
-const initSupabase = () => {
-    try {
-        const supabaseUrl = process.env.SUPABASE_URL;
-        const supabaseKey = process.env.SUPABASE_ANON_KEY;
-        return supabase.createClient(supabaseUrl, supabaseKey);
-    } catch (error) {
-        console.error('Supabase 초기화 실패:', error);
-        return null;
-    }
-};
+// scripts.js
+import { supabase } from './supabaseClient.js';
 
-// 권한별 메뉴 업데이트
-const updateMenuByRole = (role) => {
-    const navMenu = document.getElementById('navMenu');
-    
-    // 기본 메뉴 (리뷰 모아보기)
-    navMenu.innerHTML = '<a href="layout.html" class="nav-link">리뷰 모아보기</a>';
-    
-    // 권한별 메뉴 추가
-    switch(role) {
-        case 'webmaster':
-        case 'admin':
-            navMenu.innerHTML += `
-                <a href="customer Data.html" class="nav-link">고객 데이터 관리</a>
-                <a href="error_logs.html" class="nav-link">에러 로그</a>
-            `;
-            break;
-        case 'franchise':
-            // 프랜차이즈 특정 메뉴 추가
-            break;
-        case 'owner':
-            // 점주 특정 메뉴 추가
-            break;
+class PageManager {
+    constructor() {
+        this.userInfo = null;
+        this.currentStore = 'all';
+        this.currentPlatform = 'all';
+        this.currentDate = new Date();
     }
 
-    // 현재 페이지에 해당하는 메뉴 활성화
-    const currentPage = window.location.pathname.split('/').pop();
-    document.querySelectorAll('.nav-link').forEach(link => {
-        if (link.getAttribute('href') === currentPage) {
-            link.classList.add('active');
+    // 페이지 초기화
+    async initializePage() {
+        try {
+            // 1. 세션 체크
+            this.userInfo = this.checkSession();
+            if (!this.userInfo) return;
+
+            // 2. 역할 설정
+            this.setupRole();
+
+            // 3. 메뉴 설정
+            this.setupNavigation();
+
+            // 4. 이벤트 리스너 설정
+            this.setupEventListeners();
+
+            // 5. React 컴포넌트 초기화
+            this.initializeReactComponents();
+
+        } catch (error) {
+            console.error('페이지 초기화 실패:', error);
         }
-    });
-};
-
-// 세션 체크
-const checkSession = () => {
-    const userInfo = sessionStorage.getItem('userInfo');
-    if (!userInfo) {
-        window.location.href = 'login.html';
-        return null;
     }
-    return JSON.parse(userInfo);
-};
 
-// 역할 선택 이벤트 리스너
-const setupRoleSelect = () => {
-    const roleSelect = document.getElementById('roleSelect');
-    if (roleSelect) {
-        roleSelect.addEventListener('change', function() {
-            updateMenuByRole(this.value);
+    // 세션 체크
+    checkSession() {
+        const userInfo = sessionStorage.getItem('userInfo');
+        if (!userInfo) {
+            window.location.href = 'login.html';
+            return null;
+        }
+        return JSON.parse(userInfo);
+    }
+
+    // 역할 설정
+    setupRole() {
+        const roleSelect = document.getElementById('roleSelect');
+        if (roleSelect) {
+            roleSelect.value = this.userInfo.role;
+            roleSelect.disabled = true;
+        }
+    }
+
+    // 네비게이션 메뉴 설정
+    setupNavigation() {
+        const navMenu = document.getElementById('navMenu');
+        if (!navMenu) return;
+
+        let menuHtml = '<a href="layout.html" class="nav-link active">리뷰 모아보기</a>';
+        
+        // 역할별 메뉴 추가
+        switch (this.userInfo.role) {
+            case 'webmaster':
+                menuHtml += `
+                    <a href="customer_data.html" class="nav-link">고객 데이터 관리</a>
+                    <a href="error_logs.html" class="nav-link">에러 로그</a>
+                    <a href="admin_management.html" class="nav-link">관리자 관리</a>
+                `;
+                break;
+            case 'admin':
+                menuHtml += `
+                    <a href="customer_data.html" class="nav-link">고객 데이터 관리</a>
+                `;
+                break;
+        }
+
+        navMenu.innerHTML = menuHtml;
+        this.highlightCurrentPage();
+    }
+
+    // 현재 페이지 메뉴 하이라이트
+    highlightCurrentPage() {
+        const currentPage = window.location.pathname.split('/').pop();
+        document.querySelectorAll('.nav-link').forEach(link => {
+            if (link.getAttribute('href') === currentPage) {
+                link.classList.add('active');
+            } else {
+                link.classList.remove('active');
+            }
         });
     }
-};
 
-// 페이지 초기화
-const initPage = () => {
-    const userInfo = checkSession();
-    if (!userInfo) return;
+    // 이벤트 리스너 설정
+    setupEventListeners() {
+        // 플랫폼 필터 이벤트
+        document.querySelectorAll('.platform-tab').forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                this.handlePlatformChange(e.target.dataset.platform);
+            });
+        });
 
-    const supabase = initSupabase();
-    if (!supabase) return;
+        // 스토어 선택 이벤트
+        const storeSelect = document.getElementById('storeSelect');
+        if (storeSelect) {
+            storeSelect.addEventListener('change', (e) => {
+                this.handleStoreChange(e.target.value);
+            });
+        }
 
-    setupRoleSelect();
-    
-    // 초기 메뉴 설정
-    const roleSelect = document.getElementById('roleSelect');
-    if (roleSelect) {
-        updateMenuByRole(roleSelect.value);
+        // 달력 날짜 선택 이벤트
+        document.querySelectorAll('#calendarBody td[data-date]').forEach(td => {
+            td.addEventListener('click', (e) => {
+                this.handleDateSelection(e.target);
+            });
+        });
     }
-};
 
-// DOM 로드 시 초기화
-document.addEventListener('DOMContentLoaded', initPage);
+    // 플랫폼 변경 처리
+    handlePlatformChange(platform) {
+        document.querySelectorAll('.platform-tab').forEach(tab => {
+            tab.classList.toggle('active', tab.dataset.platform === platform);
+        });
+        this.currentPlatform = platform;
+        this.updateReviewDisplay();
+    }
+
+    // 스토어 변경 처리
+    handleStoreChange(storeCode) {
+        this.currentStore = storeCode;
+        this.updateReviewDisplay();
+    }
+
+    // 날짜 선택 처리
+    handleDateSelection(dateElement) {
+        // 이전 선택 제거
+        document.querySelectorAll('.calendar td.selected').forEach(td => {
+            td.classList.remove('selected');
+        });
+        
+        // 새로운 선택 추가
+        dateElement.classList.add('selected');
+        
+        // 날짜 업데이트 및 리뷰 갱신
+        const selectedDate = new Date(this.currentDate.getFullYear(), 
+                                    this.currentDate.getMonth(), 
+                                    parseInt(dateElement.dataset.date));
+        this.currentDate = selectedDate;
+        this.updateReviewDisplay();
+    }
+
+    // React 컴포넌트 초기화
+    initializeReactComponents() {
+        const container = document.getElementById('review-dashboard-root');
+        if (container && window.ReviewDashboard) {
+            const root = ReactDOM.createRoot(container);
+            root.render(React.createElement(window.ReviewDashboard, {
+                initialStore: this.currentStore,
+                initialPlatform: this.currentPlatform,
+                initialDate: this.currentDate,
+                userRole: this.userInfo.role
+            }));
+        }
+    }
+
+    // 리뷰 표시 업데이트
+    async updateReviewDisplay() {
+        if (window.reviewDashboard) {
+            window.reviewDashboard.updateFilters({
+                store: this.currentStore,
+                platform: this.currentPlatform,
+                date: this.currentDate
+            });
+        }
+    }
+}
+
+// 페이지 로드 시 초기화
+document.addEventListener('DOMContentLoaded', () => {
+    const pageManager = new PageManager();
+    pageManager.initializePage();
+    
+    // 전역 접근을 위해 window 객체에 할당
+    window.pageManager = pageManager;
+});

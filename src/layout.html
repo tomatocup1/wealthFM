@@ -4,12 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>단골을 만드는 리뷰 관리의 비법 - 부의 정석</title>
+    
+    <!-- 외부 라이브러리 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" type="module"></script>
+    
+    <!-- 폰트 -->
     <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+    
+
+    <!-- 초기화 스크립트 -->
+    <script type="module">
+        import { initializePage } from './js/init.js';
+        
+        // 페이지 로드 시 초기화
+        document.addEventListener('DOMContentLoaded', initializePage);
+    </script>
+
     <style>
+        /* 1. 변수 정의 */
         :root {
             --primary-color: #FFB6C1;
             --secondary-color: #FFF0F5;
@@ -17,35 +33,41 @@
             --text-color: #1f1010;
             --heading-color: #1b2024;
             --background-color: #FFFAF0;
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.1);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+            --border-radius: 0.5rem;
+            --spacing-sm: 0.5rem;
+            --spacing-md: 1rem;
+            --spacing-lg: 1.5rem;
         }
 
+        /* 2. 기본 스타일 */
         body {
             font-family: 'Arial', sans-serif;
             background-color: var(--background-color);
             margin: 0;
             padding: 0;
+            line-height: 1.6;
         }
 
+        /* 3. 네비게이션 스타일 */
         .navbar {
             background-color: #ffffff;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            padding: 1rem;
+            box-shadow: var(--shadow-sm);
+            padding: var(--spacing-md);
             position: fixed;
             width: 100%;
             top: 0;
             z-index: 1000;
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 1rem;
-        }
-
         .nav-content {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 var(--spacing-md);
         }
 
         .nav-brand {
@@ -56,14 +78,15 @@
 
         .nav-menu {
             display: flex;
-            gap: 2rem;
+            gap: var(--spacing-lg);
         }
 
         .nav-link {
             text-decoration: none;
             color: var(--text-color);
-            padding: 0.5rem;
+            padding: var(--spacing-sm);
             font-size: 1.1rem;
+            transition: color 0.3s;
         }
 
         .nav-link:hover {
@@ -75,64 +98,30 @@
             border-bottom: 2px solid var(--accent-color);
         }
 
-        .role-select {
-            padding: 0.5rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-family: 'Arial', sans-serif;
-        }
-
+        /* 4. 메인 콘텐츠 스타일 */
         .main-content {
             margin-top: 80px;
-            padding: 2rem;
+            padding: var(--spacing-lg);
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
-        @media (max-width: 768px) {
-            .nav-menu {
-                display: none;
-            }
-        }
-
-        /* 통계 카드 스타일 */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .stat-card {
+        /* 5. 대시보드 컴포넌트 스타일 */
+        .dashboard-container {
             background: white;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            text-align: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-lg);
+            box-shadow: var(--shadow-md);
         }
 
-        .platform-tabs {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .platform-tab {
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .platform-tab.active {
-            background-color: var(--accent-color);
-            color: white;
-        }
-
+        /* 6. 캘린더 스타일 */
         .calendar {
             background: white;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 1.5rem;
+            padding: var(--spacing-md);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md);
+            margin-bottom: var(--spacing-lg);
         }
 
         .calendar table {
@@ -144,10 +133,12 @@
         .calendar td {
             padding: 0.75rem;
             text-align: center;
+            border: 1px solid #eee;
         }
 
         .calendar td {
             cursor: pointer;
+            transition: background-color 0.3s;
         }
 
         .calendar td:hover {
@@ -158,282 +149,116 @@
             background-color: var(--accent-color);
             color: white;
         }
+        /* 추가 필요한 스타일 */
+        .calendar-card {
+            background: white;
+            padding: var(--spacing-md);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md);
+            margin-bottom: var(--spacing-lg);
+        }
 
-        .store-select {
-            width: 100%;
-            padding: 0.5rem;
-            border: 1px solid #ddd;
-            border-radius: 0.5rem;
-            margin-bottom: 1.5rem;
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: var(--spacing-md);
+            color: var(--heading-color);
+        }
+        
+        /* 7. 통계 카드 스타일 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .stat-card {
+            background: white;
+            padding: var(--spacing-md);
+            border-radius: var(--border-radius);
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* 8. 리뷰 카드 스타일 */
+        .review-card {
+            background: white;
+            padding: var(--spacing-md);
+            border-radius: var(--border-radius);
+            margin-bottom: var(--spacing-md);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .review-content {
+            margin-bottom: var(--spacing-sm);
+        }
+
+        /* 추가 필요한 스타일 */
+        .platform-tabs {
+            display: flex;
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        .platform-tab {
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-radius: var(--border-radius);
+            background: white;
+            border: 1px solid #eee;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .platform-tab.active {
+            background: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+        /* 9. 반응형 디자인 */
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .nav-menu {
+                display: none;
+            }
+
+            .main-content {
+                padding: var(--spacing-sm);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
+
 <body>
-    // 페이지 상단에 추가할 스크립트
-<script>
-    // 로그인 체크
-    function checkLogin() {
-        const userInfo = sessionStorage.getItem('userInfo');
-        if (!userInfo) {
-            window.location.href = 'login.html';
-            return null;
-        }
-        return JSON.parse(userInfo);
-    }
-
-    // 권한별 메뉴 설정
-    function setupMenuByRole(role) {
-        const navMenu = document.getElementById('navMenu');
-        const storeSelectContainer = document.querySelector('.store-select-container');
-        
-        // 기본 메뉴
-        navMenu.innerHTML = '<a href="layout.html" class="nav-link active">리뷰 모아보기</a>';
-        
-        // 권한별 메뉴 추가
-        switch(role) {
-            case 'webmaster':
-                navMenu.innerHTML += `
-                    <a href="customer_data.html" class="nav-link">고객 데이터 관리</a>
-                    <a href="error_logs.html" class="nav-link">에러 로그</a>
-                `;
-                storeSelectContainer.style.display = 'block';
-                loadAllStores();
-                break;
-            case 'admin':
-                navMenu.innerHTML += `
-                    <a href="customer_data.html" class="nav-link">고객 데이터 관리</a>
-                `;
-                storeSelectContainer.style.display = 'block';
-                loadAssignedStores();
-                break;
-            case 'franchise':
-                storeSelectContainer.style.display = 'block';
-                loadFranchiseStores();
-                break;
-            case 'owner':
-                storeSelectContainer.style.display = 'none';
-                loadSingleStore();
-                break;
-        }
-    }
-
-    // 페이지 초기화
-    document.addEventListener('DOMContentLoaded', async () => {
-        // 로그인 체크
-        const userInfo = checkLogin();
-        if (!userInfo) return;
-
-        try {
-            // 권한 설정
-            const roleSelect = document.getElementById('roleSelect');
-            roleSelect.value = userInfo.role;
-            roleSelect.disabled = true;  // 권한 변경 방지
-
-            // 메뉴 설정
-            setupMenuByRole(userInfo.role);
-
-            // 캘린더 생성
-            generateCalendar();
-
-            // 초기 데이터 로드
-            loadReviews();
-        } catch (error) {
-            console.error('페이지 초기화 실패:', error);
-        }
-    });
-</script>
-
+    <!-- 외부 라이브러리 및 모듈 로드 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" type="module"></script>
-    <script>
-        // Supabase 클라이언트 초기화는 한 번만 수행
-        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-        const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    <script type="module" src="/js/supabaseClient.js"></script>
+    <script type="module" src="/js/auth.js"></script>
+    <script type="module" src="/js/navigation.js"></script>
+    <script type="module" src="/js/stores.js"></script>
+    <script type="module" src="/js/reviews.js"></script>
+    <script type="module" src="/js/calendar.js"></script>
 
-        // 모든 가게 로드 (웹마스터)
-async function loadAllStores() {
-    try {
-        const { data, error } = await supabase
-            .from('customer_data')
-            .select('store_code, store_name')
-            .order('store_name');
-            
-        if (error) throw error;
-        updateStoreSelect(data);
-    } catch (error) {
-        console.error('가게 목록 로드 실패:', error);
-    }
-}
-
-// 할당된 가게만 로드 (관리자)
-async function loadAssignedStores() {
-    const userInfo = JSON.parse(sessionStorage.getItem('userInfo'));
-    try {
-        const { data, error } = await supabase
-            .from('admin_store_assignments')
-            .select(`
-                customer_data (
-                    store_code,
-                    store_name
-                )
-            `)
-            .eq('admin_id', userInfo.id)
-            .eq('status', 'active');
-            
-        if (error) throw error;
-        updateStoreSelect(data.map(d => d.customer_data));
-    } catch (error) {
-        console.error('가게 목록 로드 실패:', error);
-    }
-}
-
-// 프랜차이즈 가게 로드
-async function loadFranchiseStores() {
-    const userInfo = JSON.parse(sessionStorage.getItem('userInfo'));
-    try {
-        const { data, error } = await supabase
-            .from('customer_data')
-            .select('store_code, store_name')
-            .eq('franchise_id', userInfo.id)
-            .order('store_name');
-            
-        if (error) throw error;
-        updateStoreSelect(data);
-    } catch (error) {
-        console.error('가게 목록 로드 실패:', error);
-    }
-}
-
-// 단일 가게 로드 (점주)
-async function loadSingleStore() {
-    const userInfo = JSON.parse(sessionStorage.getItem('userInfo'));
-    try {
-        const { data, error } = await supabase
-            .from('customer_data')
-            .select('store_code, store_name')
-            .eq('store_code', userInfo.store_code)
-            .single();
-            
-        if (error) throw error;
-        updateStoreSelect([data]);
-    } catch (error) {
-        console.error('가게 정보 로드 실패:', error);
-    }
-}
-
-        // 역할 선택에 따른 UI 업데이트
-        document.getElementById('roleSelect').addEventListener('change', function() {
-            const role = this.value;
-            const navMenu = document.getElementById('navMenu');
-            const storeSelectContainer = document.querySelector('.store-select-container');
-            
-            // 기본 메뉴
-            navMenu.innerHTML = '<a href="#" class="nav-link active">리뷰 모아보기</a>';
-            
-            // 권한별 메뉴 및 기능 설정
-            switch(role) {
-                case 'webmaster':
-                case 'admin':
-                    navMenu.innerHTML += `
-                        <a href="customer_data.html" class="nav-link">고객 데이터 관리</a>
-                        <a href="error_logs.html" class="nav-link">에러 로그</a>
-                    `;
-                    loadStores(role);
-                    break;
-                    
-                case 'franchise':
-                    loadStores(role);
-                    break;
-                    
-                default:
-                    storeSelectContainer.style.display = 'none';
-                    loadReviews('all'); // 전체 리뷰 로드
-            }
-        });
-
-        // 리뷰 데이터 불러오기 함수 수정
-        async function loadReviews(storeId = 'all') {
-            try {
-                let query = supabase
-                    .from('reviews')
-                    .select(`
-                        *,
-                        stores (
-                            name,
-                            franchise_id
-                        )
-                    `)
-                    .order('created_at', { ascending: false });
-
-                // 특정 가게가 선택된 경우 필터링
-                if (storeId !== 'all') {
-                    query = query.eq('store_id', storeId);
-                }
-
-                // 현재 선택된 역할에 따른 필터링
-                const currentRole = document.getElementById('roleSelect').value;
-                if (currentRole === 'franchise' && storeId === 'all') {
-                    // 프랜차이즈의 경우 자신의 모든 지점 리뷰만 표시
-                    query = query.eq('stores.franchise_id', getCurrentFranchiseId());
-                }
-
-                const { data: reviews, error } = await query;
-
-                if (error) throw error;
-
-                // 리뷰 표시 및 통계 업데이트
-                displayReviews(reviews);
-                updateStats(reviews);
-
-            } catch (error) {
-                console.error('리뷰 불러오기 실패:', error);
-            }
-        }
-
-        // 리뷰 표시 함수
-        function displayReviews(reviews) {
-            const reviewsContainer = document.querySelector('.reviews');
-            
-            reviewsContainer.innerHTML = reviews.map(review => `
-                <div class="review-card">
-                    <div class="review-header">
-                        <div>
-                            <span class="reviewer">${review.nickname || '익명'}</span>
-                            ${review.stores ? `<span class="store-name">(${review.stores.name})</span>` : ''}
-                        </div>
-                        <span class="review-date">${new Date(review.created_at).toLocaleDateString()}</span>
-                    </div>
-                    <div class="review-content">
-                        ${review.content}
-                    </div>
-                    <div class="review-menu">
-                        주문메뉴: ${review.menu || '정보 없음'}
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // 페이지 로드 시 실행
-        document.addEventListener('DOMContentLoaded', () => {
-            const initialRole = document.getElementById('roleSelect').value;
-            if (['webmaster', 'admin', 'franchise'].includes(initialRole)) {
-                loadStores(initialRole);
-            }
-            loadReviews('all');
-        });
-
-        // 가게 선택 이벤트
-        document.getElementById('storeSelect').addEventListener('change', function() {
-            loadReviews(this.value);
-        });
-    </script>    
-
+    <!-- 네비게이션 바 -->
     <nav class="navbar">
         <div class="container nav-content">
             <div class="nav-brand">부의 정석</div>
-            <div class="nav-menu" id="navMenu">
-                <!-- 메뉴는 JavaScript에서 동적으로 생성됩니다 -->
-            </div>
+            <div class="nav-menu" id="navMenu"></div>
             <select class="role-select" id="roleSelect" disabled>
                 <option value="webmaster">웹마스터</option>
                 <option value="admin">관리자</option>
@@ -443,201 +268,84 @@ async function loadSingleStore() {
         </div>
     </nav>
 
-    <main class="main-content">
-        <div id="review-dashboard-root">
-            <!-- React 컴포넌트가 여기에 마운트됩니다 -->
-        </div>
-    </main>
-    
-    <script type="text/babel" src="/js/Review.js"></script>
-    <script type="text/babel">
-        // React 컴포넌트를 마운트합니다
-        const container = document.getElementById('review-dashboard-root');
-        const root = ReactDOM.createRoot(container);
-        root.render(<ReviewDashboard />);
-    </script>
-
-    <script>
-        // 세션 체크 및 메뉴 설정
-        document.addEventListener('DOMContentLoaded', function() {
-            const userInfo = JSON.parse(sessionStorage.getItem('userInfo'));
-            if (!userInfo) {
-                window.location.href = 'login.html';
-                return;
-            }
-
-            // 역할에 따른 메뉴 설정
-            const roleSelect = document.getElementById('roleSelect');
-            roleSelect.value = userInfo.role;
-
-            // 메뉴 업데이트
-            updateMenuByRole(userInfo.role);
-        });
-
-        function updateMenuByRole(role) {
-            const navMenu = document.getElementById('navMenu');
-            let menuHtml = '<a href="layout.html" class="nav-link active">리뷰 모아보기</a>';
-            
-            if (role === 'webmaster' || role === 'admin') {
-                menuHtml += '<a href="customer_data.html" class="nav-link">고객 데이터 관리</a>';
-            }
-            
-            if (role === 'webmaster') {
-                menuHtml += '<a href="error_logs.html" class="nav-link">에러 로그</a>';
-            }
-            
-            navMenu.innerHTML = menuHtml;
-        }
-    </script>
-    
-    <main class="main-content container">
-        <div class="calendar-stats-container">
-            <div class="calendar-card">
-                <h2 style="margin-bottom: 1rem;">날짜 선택</h2>
-                <table class="calendar">
-                    <thead>
-                        <tr>
-                            <th>일</th>
-                            <th>월</th>
-                            <th>화</th>
-                            <th>수</th>
-                            <th>목</th>
-                            <th>금</th>
-                            <th>토</th>
-                        </tr>
-                    </thead>
-                    <tbody id="calendarBody">
-                        <!-- Calendar will be generated by JavaScript -->
-                    </tbody>
-                </table>
-            </div>
-            <div class="stats-card">
-                <h2 style="margin-bottom: 1rem;">일일 통계</h2>
-                <div class="stats-grid">
-                    <div class="stat-item">
-                        <div class="stat-number" data-rating="5">12</div>
-                        <div class="stat-label">5점</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number" data-rating="4">8</div>
-                        <div class="stat-label">4점</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number" data-rating="3">3</div>
-                        <div class="stat-label">3점</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number" data-rating="2">1</div>
-                        <div class="stat-label">2점</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number" data-rating="1">0</div>
-                        <div class="stat-label">1점</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="reviews-container">
-            <div class="reviews-container">
-                <div class="store-select-container" style="display: none;">
-                    <label for="storeSelect" style="display: block; margin-bottom: 8px; font-weight: bold;">가게 선택</label>
-                    <select id="storeSelect" class="store-select">
+    <!-- 메인 컨텐츠 영역 -->
+    return (
+        <div className="dashboard-container p-6">
+            {/* 가게 선택 영역 */}
+            {userRole !== 'owner' && (
+                <div className="store-select-container mb-6">
+                    <label htmlFor="storeSelect" className="font-bold mb-2">가게 선택</label>
+                    <select 
+                        id="storeSelect" 
+                        className="store-select w-full p-2 border rounded"
+                        value={selectedStore}
+                        onChange={(e) => setSelectedStore(e.target.value)}
+                    >
                         <option value="all">전체 가게</option>
+                        {stores.map(store => (
+                            <option key={store.store_code} value={store.store_code}>
+                                {store.store_name}
+                            </option>
+                        ))}
                     </select>
                 </div>
-
-            <div class="review-filter">
-                <div class="platform-tabs">
-                    <button class="platform-tab active">배민</button>
-                    <button class="platform-tab">쿠팡이츠</button>
-                    <button class="platform-tab">요기요</button>
+            )}
+    
+            {/* 캘린더 및 통계 영역 */}
+            <div className="calendar-stats-container grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div className="calendar-card">
+                    <h2 className="section-title">날짜 선택</h2>
+                    <table className="calendar w-full">
+                        <thead>
+                            <tr>
+                                <th>일</th>
+                                <th>월</th>
+                                <th>화</th>
+                                <th>수</th>
+                                <th>목</th>
+                                <th>금</th>
+                                <th>토</th>
+                            </tr>
+                        </thead>
+                        <tbody id="calendarBody"></tbody>
+                    </table>
+                </div>
+    
+                <div className="stats-card">
+                    <h2 className="section-title">별점 통계</h2>
+                    <div className="stats-grid">
+                        {[5,4,3,2,1].map(rating => (
+                            <div key={rating} className="stat-card">
+                                <div className="text-2xl font-bold">{statistics.ratings[rating]}</div>
+                                <div className="text-gray-600">{rating}점</div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
-            
-            <div class="reviews">
-                <div class="review-card">
-                    <div class="review-header">
-                        <span class="reviewer">홍길동</span>
-                        <span class="review-date">2024-01-14</span>
-                    </div>
-                    <div class="review-content">
-                        맛있게 잘 먹었습니다! 배달도 빨랐고 음식도 따뜻했어요.
-                    </div>
-                    <div class="review-menu">
-                        주문메뉴: 돈까스 + 우동
-                    </div>
+    
+            {/* 리뷰 필터 및 목록 */}
+            <div className="reviews-container">
+                <div className="platform-tabs mb-6">
+                    {['all', 'baemin', 'coupang', 'yogiyo'].map(platform => (
+                        <button 
+                            key={platform}
+                            className={`platform-tab ${selectedPlatform === platform ? 'active' : ''}`}
+                            onClick={() => setPlatform(platform)}
+                        >
+                            {platform === 'all' ? '전체' :
+                             platform === 'baemin' ? '배민' :
+                             platform === 'coupang' ? '쿠팡이츠' : '요기요'}
+                        </button>
+                    ))}
+                </div>
+    
+                <div className="reviews-list space-y-4">
+                    {/* 리뷰 목록이 여기에 렌더링됩니다 */}
                 </div>
             </div>
         </div>
+    );
     </main>
 
-    <script>
-        // 역할 선택에 따른 메뉴 표시
-        document.getElementById('roleSelect').addEventListener('change', function() {
-            const role = this.value;
-            const navMenu = document.getElementById('navMenu');
-            
-            // 기본 메뉴 (리뷰 모아보기)
-            navMenu.innerHTML = '<a href="#" class="nav-link active">리뷰 모아보기</a>';
-            
-            // 웹마스터와 관리자일 경우 추가 메뉴 표시
-            if (role === 'webmaster' || role === 'admin') {
-                navMenu.innerHTML += `
-                    <a href="customer_data.html" class="nav-link">고객 데이터 관리</a>
-                    <a href="error_logs.html" class="nav-link">에러 로그</a>
-                `;
-            }
-        });
-
-        // 캘린더 생성
-        function generateCalendar() {
-            const today = new Date();
-            const currentMonth = today.getMonth();
-            const currentYear = today.getFullYear();
-            
-            const firstDay = new Date(currentYear, currentMonth, 1);
-            const lastDay = new Date(currentYear, currentMonth + 1, 0);
-            
-            const calendarBody = document.getElementById('calendarBody');
-            let date = 1;
-            let html = '';
-
-            // Create calendar rows
-            for (let i = 0; i < 6; i++) {
-                html += '<tr>';
-                for (let j = 0; j < 7; j++) {
-                    if (i === 0 && j < firstDay.getDay()) {
-                        html += '<td></td>';
-                    } else if (date > lastDay.getDate()) {
-                        html += '<td></td>';
-                    } else {
-                        const isToday = date === today.getDate();
-                        html += `<td class="${isToday ? 'today' : ''}" data-date="${date}">${date}</td>`;
-                        date++;
-                    }
-                }
-                html += '</tr>';
-                if (date > lastDay.getDate()) break;
-            }
-            
-            calendarBody.innerHTML = html;
-
-            // 날짜 클릭 이벤트 추가
-            document.querySelectorAll('#calendarBody td[data-date]').forEach(td => {
-                td.addEventListener('click', function() {
-                    // 이전 선택 제거
-                    document.querySelectorAll('#calendarBody td.selected').forEach(el => {
-                        el.classList.remove('selected');
-                    });
-                    // 새로운 선택 추가
-                    this.classList.add('selected');
-                });
-            });
-        }
-
-        // 캘린더 초기 생성
-        generateCalendar();
-    </script>
 </body>
-</html>
