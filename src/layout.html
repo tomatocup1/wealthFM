@@ -245,15 +245,6 @@
 </head>
 
 <body>
-    <!-- 외부 라이브러리 및 모듈 로드 -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" type="module"></script>
-    <script type="module" src="/js/supabaseClient.js"></script>
-    <script type="module" src="/js/auth.js"></script>
-    <script type="module" src="/js/navigation.js"></script>
-    <script type="module" src="/js/stores.js"></script>
-    <script type="module" src="/js/reviews.js"></script>
-    <script type="module" src="/js/calendar.js"></script>
-
     <!-- 네비게이션 바 -->
     <nav class="navbar">
         <div class="container nav-content">
@@ -268,84 +259,9 @@
         </div>
     </nav>
 
-    <!-- 메인 컨텐츠 영역 -->
-    return (
-        <div className="dashboard-container p-6">
-            {/* 가게 선택 영역 */}
-            {userRole !== 'owner' && (
-                <div className="store-select-container mb-6">
-                    <label htmlFor="storeSelect" className="font-bold mb-2">가게 선택</label>
-                    <select 
-                        id="storeSelect" 
-                        className="store-select w-full p-2 border rounded"
-                        value={selectedStore}
-                        onChange={(e) => setSelectedStore(e.target.value)}
-                    >
-                        <option value="all">전체 가게</option>
-                        {stores.map(store => (
-                            <option key={store.store_code} value={store.store_code}>
-                                {store.store_name}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-            )}
-    
-            {/* 캘린더 및 통계 영역 */}
-            <div className="calendar-stats-container grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div className="calendar-card">
-                    <h2 className="section-title">날짜 선택</h2>
-                    <table className="calendar w-full">
-                        <thead>
-                            <tr>
-                                <th>일</th>
-                                <th>월</th>
-                                <th>화</th>
-                                <th>수</th>
-                                <th>목</th>
-                                <th>금</th>
-                                <th>토</th>
-                            </tr>
-                        </thead>
-                        <tbody id="calendarBody"></tbody>
-                    </table>
-                </div>
-    
-                <div className="stats-card">
-                    <h2 className="section-title">별점 통계</h2>
-                    <div className="stats-grid">
-                        {[5,4,3,2,1].map(rating => (
-                            <div key={rating} className="stat-card">
-                                <div className="text-2xl font-bold">{statistics.ratings[rating]}</div>
-                                <div className="text-gray-600">{rating}점</div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-    
-            {/* 리뷰 필터 및 목록 */}
-            <div className="reviews-container">
-                <div className="platform-tabs mb-6">
-                    {['all', 'baemin', 'coupang', 'yogiyo'].map(platform => (
-                        <button 
-                            key={platform}
-                            className={`platform-tab ${selectedPlatform === platform ? 'active' : ''}`}
-                            onClick={() => setPlatform(platform)}
-                        >
-                            {platform === 'all' ? '전체' :
-                             platform === 'baemin' ? '배민' :
-                             platform === 'coupang' ? '쿠팡이츠' : '요기요'}
-                        </button>
-                    ))}
-                </div>
-    
-                <div className="reviews-list space-y-4">
-                    {/* 리뷰 목록이 여기에 렌더링됩니다 */}
-                </div>
-            </div>
+    <main class="main-content container">
+        <div id="review-dashboard-root">
+            <!-- React 컴포넌트가 여기에 렌더링됩니다 -->
         </div>
-    );
     </main>
-
 </body>
