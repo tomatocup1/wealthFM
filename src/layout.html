@@ -5,6 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>단골을 만드는 리뷰 관리의 비법 - 부의 정석</title>
     
+    <!-- React 관련 스크립트 -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
     <!-- 외부 라이브러리 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
@@ -498,9 +508,6 @@
                 });
             }
         });
-    // React 컴포넌트 렌더링
-    const root = ReactDOM.createRoot(document.getElementById('review-dashboard-root'));
-    root.render(<ReviewDashboard />);
 </script>
 </body>
 </html>
