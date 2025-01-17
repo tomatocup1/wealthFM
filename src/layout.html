@@ -17,14 +17,14 @@
     
     <!-- Supabase -->
     <script type="module">
-        import { supabase } from './supabaseClient.js';
+        import { supabase } from './js/supabaseClient.js';
         window.supabase = supabase;
     </script>
-    
-    <!-- 초기화 스크립트 -->
+
+    <!-- 페이지 초기화 스크립트 -->
     <script type="module">
         import { initializePage } from './js/init.js';
-    
+
         document.addEventListener('DOMContentLoaded', () => {
             initializePage();
         });
