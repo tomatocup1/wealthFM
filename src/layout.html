@@ -274,22 +274,28 @@
         <div id="review-dashboard-root"></div>
     </main>
 
-    <!-- React 컴포넌트와 Supabase 설정 -->
-    <script type="text/babel">
-        const { useState, useEffect } = React;
-        
-        // Review 컴포넌트 정의
-        const ReviewDashboard = () => {
-            const [stores, setStores] = useState([]);
-            const [reviews, setReviews] = useState([]);
-            const [selectedStore, setSelectedStore] = useState('all');
-            const [selectedDate, setSelectedDate] = useState(new Date());
-            const [selectedPlatform, setPlatform] = useState('all');
-            const [statistics, setStatistics] = useState({
-                ratings: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
-            });
-            const [userRole, setUserRole] = useState('');
-            const [loading, setLoading] = useState(true);
+<!-- React 컴포넌트와 Supabase 설정 -->
+    <script type="text/babel" data-type="module">
+        import { supabase } from './js/supabaseClient.js';
+        import { initializePage } from './js/init.js';
+        import React, { useState, useEffect } from 'react';
+    
+    // Review 컴포넌트
+    const ReviewDashboard = () => {
+        const [stores, setStores] = useState([]);
+        const [reviews, setReviews] = useState([]);
+        const [selectedStore, setSelectedStore] = useState('all');
+        const [selectedDate, setSelectedDate] = useState(new Date());
+        const [selectedPlatform, setPlatform] = useState('all');
+        const [statistics, setStatistics] = useState({
+            ratings: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+        });
+        const [userRole, setUserRole] = useState('');
+        const [loading, setLoading] = useState(true);
+
+        // 달력을 위한 상태들
+        const [currentMonth, setCurrentMonth] = useState(new Date());
+        const [selectedDay, setSelectedDay] = useState(new Date());
 
             // 사용자 정보 및 가게 목록 로드
             useEffect(() => {
@@ -492,6 +498,9 @@
                 });
             }
         });
-    </script>
+    // React 컴포넌트 렌더링
+    const root = ReactDOM.createRoot(document.getElementById('review-dashboard-root'));
+    root.render(<ReviewDashboard />);
+</script>
 </body>
 </html>

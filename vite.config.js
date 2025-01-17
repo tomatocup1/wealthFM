@@ -28,6 +28,9 @@ export default defineConfig({
     outDir: '../dist',
     emptyOutDir: true
   },
+  resolve: {
+    extensions: ['.js', '.jsx']  // .jsx 파일 지원 추가
+  },
   server: {
     port: 3000
   },
