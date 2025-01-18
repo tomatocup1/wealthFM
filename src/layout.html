@@ -224,7 +224,9 @@
         <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 border border-gray-100">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <span className="font-bold text-lg text-gray-800">{review.store_name}</span>
+              <span className="font-bold text-lg text-gray-800">
+                {review.store_name}
+              </span>
               <span className={`px-3 py-1 rounded-full text-sm ${getPlatformColor(review.platform)}`}>
                 {review.platform}
               </span>
@@ -301,7 +303,7 @@
         }
       }, []);
 
-      // 가게 목록 로드
+      // 3-1) 가게 목록 로드
       async function loadStores(role, userId) {
         try {
           let query = window.supabase
@@ -331,7 +333,7 @@
         }
       }
 
-      // 달력 생성
+      // 3-2) 달력 생성
       function generateCalendar(date) {
         const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
         const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
@@ -359,14 +361,16 @@
         return weeks;
       }
 
-      // 날짜 클릭
+      // 3-3) 달력 날짜 선택
       function handleDateSelect(date) {
         setSelectedDay(date);
         setSelectedDate(date);
         loadReviews(date);
       }
 
-      // 리뷰 로드 (selectedDate, selectedStore, selectedPlatform 바뀔 때)
+      // 3-4) 리뷰 로드
+      // DB가 date 타입이면 eq('YYYY-MM-DD')로 충분하지만,
+      // timestamp with time zone(UTC)라면 아래 [방법 B]처럼 범위 쿼리가 필요.
       useEffect(() => {
         loadReviews(selectedDate);
         // eslint-disable-next-line
@@ -375,11 +379,24 @@
       async function loadReviews(date) {
         try {
           setLoading(true);
+
+          // [방법 A: date 타입일 때]
           const formattedDate = date.toISOString().split("T")[0];
           let query = window.supabase
             .from("review_data")
             .select("*")
             .eq("review_date", formattedDate);
+
+          // [방법 B: UTC 범위 조회 - 주석처리. DB가 timestamptz일 때 사용 가능]
+          // const startKST = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0);
+          // const endKST = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59);
+          // const startUtc = startKST.toISOString();
+          // const endUtc = endKST.toISOString();
+          // let query = window.supabase
+          //   .from("review_data")
+          //   .select("*")
+          //   .gte("review_date", startUtc)
+          //   .lte("review_date", endUtc);
 
           if (selectedStore !== "all") {
             query = query.eq("store_code", selectedStore);
@@ -400,7 +417,7 @@
         }
       }
 
-      // 별점 통계
+      // 3-5) 별점 통계 업데이트
       function updateStatistics(reviewData) {
         const newStats = {
           ratings: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
@@ -414,6 +431,7 @@
         setStatistics(newStats);
       }
 
+      // 3-6) 날짜를 한글로 예쁘게 표시
       function formatDate(date) {
         return new Date(date).toLocaleDateString("ko-KR", {
           year: "numeric",
@@ -506,7 +524,9 @@
                   <div className="text-2xl font-bold">
                     {statistics.ratings[rating]}
                   </div>
-                  <div className="text-gray-600">{rating}점</div>
+                  <div className="text-gray-600">
+                    {rating}점
+                  </div>
                 </div>
               ))}
             </div>
