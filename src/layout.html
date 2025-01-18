@@ -19,8 +19,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     /* 실제 프로젝트 키로 교체해 사용 */
-    const SUPABASE_URL = "https://xxxxx.supabase.co";
-    const SUPABASE_ANON_KEY = "public-anon-key";
+    const SUPABASE_URL = "https://xyzysbfukemhbmprtzto.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5enlzYmZ1a2VtaGJtcHJ0enRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzYxNTg4NjIsImV4cCI6MjA1MTczNDg2Mn0.DTRZM9WcXNhILGGGL4BJR40-snEh6Fna008hAGsExbY";
     window.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   </script>
 
@@ -47,7 +47,7 @@
     /* 2. 기본 스타일 */
     body {
       font-family: 'Arial', sans-serif;
-      background-color: #FFFAF0;
+      background-color: var(--background-color);
       margin: 0;
       padding: 0;
       line-height: 1.6;
@@ -117,7 +117,7 @@
       margin-right: auto;
     }
 
-    /* 5. 대시보드 컴포넌트 스타일 */
+    /* 대시보드 컨테이너 */
     .dashboard-container {
       background: white;
       border-radius: var(--border-radius);
@@ -125,7 +125,7 @@
       box-shadow: var(--shadow-md);
     }
 
-    /* 6. 캘린더 스타일 */
+    /* 달력 관련 */
     .calendar {
       background: white;
       padding: var(--spacing-md);
@@ -133,37 +133,18 @@
       box-shadow: var(--shadow-md);
       margin-bottom: var(--spacing-lg);
     }
-
-    .calendar table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    .calendar th,
-    .calendar td {
-      padding: 0.75rem;
+    .calendar td, .calendar th {
       text-align: center;
       border: 1px solid #eee;
+      padding: 8px;
     }
-
-    .calendar td {
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
-
     .calendar td:hover {
       background-color: #f0f0f0;
+      cursor: pointer;
     }
-
     .calendar td.selected {
       background-color: var(--accent-color);
-      color: white;
-    }
-
-    .platform-tab.active {
-      background: var(--accent-color);
-      color: white;
-      border-color: var(--accent-color);
+      color: #fff;
     }
 
     @media (max-width: 768px) {
@@ -176,7 +157,7 @@
     }
 
     @media (max-width: 480px) {
-      /* 반응형 추가 스타일 */
+      /* 필요하면 추가 반응형 */
     }
   </style>
 </head>
@@ -200,12 +181,12 @@
     </div>
   </nav>
 
-  <!-- 메인 영역 -->
+  <!-- 메인 콘텐츠 -->
   <main class="main-content">
     <div id="review-dashboard-root"></div>
   </main>
 
-  <!-- React 코드 (Babel 변환) -->
+  <!-- React 코드 (in-browser Babel) -->
   <script type="text/babel">
     const { useState, useEffect } = React;
 
@@ -214,19 +195,19 @@
       const [stores, setStores] = useState([]);
       const [reviews, setReviews] = useState([]);
       const [selectedStore, setSelectedStore] = useState("all");
-      const [selectedDate, setSelectedDate] = useState(new Date());
       const [selectedPlatform, setPlatform] = useState("all");
+      const [selectedDate, setSelectedDate] = useState(new Date());
+      const [userRole, setUserRole] = useState("");
       const [statistics, setStatistics] = useState({
         ratings: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
       });
-      const [userRole, setUserRole] = useState("");
       const [loading, setLoading] = useState(true);
 
       // 달력을 위한 상태
       const [currentMonth, setCurrentMonth] = useState(new Date());
       const [selectedDay, setSelectedDay] = useState(new Date());
 
-      // 사용자 정보 & 가게 목록 로드
+      // 처음 마운트 시 로그인 정보/가게 목록
       useEffect(() => {
         const userInfo = sessionStorage.getItem("userInfo");
         if (userInfo) {
@@ -240,6 +221,7 @@
       async function loadStores(role, userId) {
         try {
           let query = window.supabase.from("customer_data").select("store_code, store_name");
+          
           switch (role) {
             case "admin":
               query = query.eq("admin_id", userId);
@@ -250,7 +232,7 @@
             case "owner":
               query = query.eq("store_code", userId);
               break;
-            // webmaster인 경우 전체 조회
+            // webmaster -> 전체
             default:
               break;
           }
@@ -262,7 +244,7 @@
         }
       }
 
-      // 달력 생성 함수
+      // 달력 데이터 생성
       function generateCalendar(date) {
         const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
         const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
@@ -272,6 +254,7 @@
         const weeks = [];
         let currentWeek = [];
         
+        // 달력 행 만들기
         for (let day = new Date(startDate); day <= lastDay; day.setDate(day.getDate() + 1)) {
           if (currentWeek.length === 7) {
             weeks.push(currentWeek);
@@ -279,8 +262,8 @@
           }
           currentWeek.push(new Date(day));
         }
-        
-        // 남은 요일 채우기
+
+        // 마지막 행 채우기
         while (currentWeek.length < 7) {
           const nextDay = new Date(currentWeek[currentWeek.length - 1]);
           nextDay.setDate(nextDay.getDate() + 1);
@@ -299,11 +282,16 @@
       }
 
       // 리뷰 로드
-      async function loadReviews(date = selectedDate) {
+      useEffect(() => {
+        loadReviews(selectedDate);
+      // eslint-disable-next-line
+      }, [selectedStore, selectedPlatform]);
+
+      async function loadReviews(date) {
         try {
           setLoading(true);
-
           const formattedDate = date.toISOString().split("T")[0];
+
           let query = window.supabase
             .from("review_data")
             .select("*")
@@ -312,7 +300,6 @@
           if (selectedStore !== "all") {
             query = query.eq("store_code", selectedStore);
           }
-
           if (selectedPlatform !== "all") {
             query = query.eq("platform", selectedPlatform);
           }
@@ -331,7 +318,9 @@
 
       // 별점 통계 업데이트
       function updateStatistics(reviewData) {
-        const newStats = { ratings: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 } };
+        const newStats = {
+          ratings: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+        };
         reviewData.forEach((r) => {
           const rating = parseInt(r.star_rating, 10);
           if (rating >= 1 && rating <= 5) {
@@ -341,7 +330,6 @@
         setStatistics(newStats);
       }
 
-      // 날짜 포맷
       function formatDate(date) {
         return new Date(date).toLocaleDateString("ko-KR", {
           year: "numeric",
@@ -350,13 +338,14 @@
         });
       }
 
+      // 화면 구성
       return (
         <div className="dashboard-container p-6">
           {/* 달력 섹션 */}
           <div className="bg-white rounded-lg p-6 shadow-md mb-6">
             <h2 className="text-xl font-bold mb-4">날짜 선택</h2>
             <div className="mb-4 flex justify-between items-center">
-              <button 
+              <button
                 onClick={() => {
                   const prev = new Date(currentMonth);
                   prev.setMonth(prev.getMonth() - 1);
@@ -372,7 +361,7 @@
                   month: "long",
                 })}
               </div>
-              <button 
+              <button
                 onClick={() => {
                   const next = new Date(currentMonth);
                   next.setMonth(next.getMonth() + 1);
@@ -384,28 +373,28 @@
               </button>
             </div>
             <div className="grid grid-cols-7 gap-1">
-              {["일", "월", "화", "수", "목", "금", "토"].map((day) => (
+              {["일","월","화","수","목","금","토"].map((day) => (
                 <div key={day} className="text-center font-bold py-2">
                   {day}
                 </div>
               ))}
-              {generateCalendar(currentMonth).flat().map((dateObj, index) => (
-                <div
-                  key={index}
-                  onClick={() => handleDateSelect(dateObj)}
-                  className={`
-                    text-center p-2 cursor-pointer rounded
-                    ${dateObj.getMonth() === currentMonth.getMonth() ? "text-gray-800" : "text-gray-400"}
-                    ${
-                      selectedDay.toDateString() === dateObj.toDateString()
-                        ? "bg-blue-500 text-white"
-                        : "hover:bg-gray-100"
-                    }
-                  `}
-                >
-                  {dateObj.getDate()}
-                </div>
-              ))}
+              {generateCalendar(currentMonth).flat().map((dateObj, idx) => {
+                const isCurrentMonth = (dateObj.getMonth() === currentMonth.getMonth());
+                const isSelected = (dateObj.toDateString() === selectedDay.toDateString());
+                return (
+                  <div
+                    key={idx}
+                    onClick={() => handleDateSelect(dateObj)}
+                    className={`
+                      text-center p-2 cursor-pointer rounded
+                      ${isCurrentMonth ? "text-gray-800" : "text-gray-400"}
+                      ${isSelected ? "bg-blue-500 text-white" : "hover:bg-gray-100"}
+                    `}
+                  >
+                    {dateObj.getDate()}
+                  </div>
+                );
+              })}
             </div>
           </div>
 
@@ -429,9 +418,11 @@
           <div className="bg-white rounded-lg p-6 shadow-md mb-6">
             <h2 className="text-xl font-bold mb-4">별점 통계</h2>
             <div className="grid grid-cols-5 gap-4">
-              {[5, 4, 3, 2, 1].map((rating) => (
+              {[5,4,3,2,1].map((rating) => (
                 <div key={rating} className="text-center p-4 bg-gray-50 rounded-lg">
-                  <div className="text-2xl font-bold">{statistics.ratings[rating]}</div>
+                  <div className="text-2xl font-bold">
+                    {statistics.ratings[rating]}
+                  </div>
                   <div className="text-gray-600">{rating}점</div>
                 </div>
               ))}
@@ -479,6 +470,13 @@
                     <span>주문메뉴: {review.order_menu}</span>
                     <span className="ml-4">별점: {review.star_rating}점</span>
                   </div>
+
+                  {/* AI 답변이 있을 경우 표시 (review.ai_reply 컬럼) */}
+                  {review.ai_reply && (
+                    <div className="mt-2 p-2 bg-gray-50 rounded">
+                      <strong>사장님 답글: </strong>{review.ai_reply}
+                    </div>
+                  )}
                 </div>
               ))
             )}
@@ -487,7 +485,7 @@
       );
     }
 
-    // 렌더링
+    // ReactDOM 렌더링
     const rootElement = document.getElementById("review-dashboard-root");
     const root = ReactDOM.createRoot(rootElement);
     root.render(<ReviewDashboard />);
@@ -500,6 +498,7 @@
       const navMenu = document.getElementById("navMenu");
 
       if (!userInfo.role) {
+        // 로그인 정보 없으면 로그인 페이지로
         window.location.href = "login.html";
       } else {
         updateMenuByRole(userInfo.role);
