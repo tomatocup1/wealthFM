@@ -69,7 +69,6 @@ async function fetchLogData(date) {
     }
 }
 
-// 로그 테이블 업데이트 함수
 function updateLogTable(logs) {
     const tbody = document.getElementById('logTableBody');
     if (!logs || logs.length === 0) {
@@ -79,7 +78,7 @@ function updateLogTable(logs) {
 
     tbody.innerHTML = logs.map(log => `
         <tr>
-            <td>${new Date(log.occurred_at).toLocaleString('ko-KR')}</td>
+           <td>${formatRawTime(log.occurred_at)}</td>
             <td>
                 <span class="badge ${log.category === '오류' ? 'badge-error' : 'badge-warning'}">
                     ${log.category || '-'}
