@@ -1,5 +1,5 @@
-[build]
-  command = "npm run build"
+build]
+  command = "npm run build && cp -r public/* dist/"  # public 폴더의 내용을 dist로 복사
   publish = "dist"
   functions = "netlify/functions"
 

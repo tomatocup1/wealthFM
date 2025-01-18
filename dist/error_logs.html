@@ -213,9 +213,9 @@
             }
         }
     </style>
-  <script type="module" crossorigin src="/chunks/modulepreload-polyfill-B5Qt9EMX.js"></script>
-  <script type="module" crossorigin src="/chunks/index-BQfYHZiF.js"></script>
-  <script type="module" crossorigin src="/chunks/error_logs-WwUH5O0A.js"></script>
+  <script type="module" crossorigin src="/error_logs.js"></script>
+  <link rel="modulepreload" crossorigin href="/chunks/modulepreload-polyfill-B5Qt9EMX.js">
+  <link rel="modulepreload" crossorigin href="/chunks/index-BQfYHZiF.js">
 </head>
 <body>
     
@@ -381,13 +381,22 @@
                 console.error('Error fetching logs:', error);
             }
         }
+        // error_logs.js
+        function formatKoreanTime(utcString) {
+        if (!utcString) return '';
+        return new Date(utcString).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
+        }
 
         // 로그 테이블 업데이트
         function updateLogTable(logs) {
             const tbody = document.getElementById('logTableBody');
+            if (!logs || logs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">해당 날짜의 오류 로그가 없습니다.</td></tr>';
+                return;
+            }
             tbody.innerHTML = logs.map(log => `
                 <tr>
-                    <td>${new Date(log.occurred_at).toLocaleString()}</td>
+                    <td>${formatKoreanTime(log.occurred_at)}</td>
                     <td><span class="badge badge-${log.category === '오류' ? 'error' : 'warning'}">${log.category}</span></td>
                     <td>${log.platform}</td>
                     <td>${log.store_name}</td>
