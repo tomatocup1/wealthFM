@@ -177,6 +177,14 @@ class PageManager {
 
 // 페이지 로드 시 초기화
 document.addEventListener('DOMContentLoaded', () => {
+
+    const currentPage = window.location.pathname.split('/').pop();
+    if (currentPage === 'index.html') {
+        // index.html은 로그인 체크하지 않고 그냥 통과
+        // (pageManager.initializePage() 호출도 안 할 수 있음)
+        return;
+    }
+    
     const pageManager = new PageManager();
     pageManager.initializePage();
     
