@@ -188,22 +188,24 @@
   <script type="text/babel">
     const { useState, useEffect } = React;
 
-    // 1) UTC -> 한국시각 변환 함수
-    function formatKoreanTime(utcString) {
-      if (!utcString) return '';
-      return new Date(utcString).toLocaleString('ko-KR', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false,
-        timeZone: 'Asia/Seoul'
-      });
+    /**
+     * DB에 저장된 created_at(UTC든 KST든) 문자열을
+     * "있는 그대로" 표시하기 위한 간단한 함수.
+     * ISO 형식(YYYY-MM-DDTHH:mm:ssZ)이라면
+     * T, Z 제거만 진행해서 "YYYY-MM-DD HH:mm:ss" 형태로 보여줍니다.
+     */
+    function formatRawTime(isoString) {
+      if (!isoString) return '';
+      // 예: "2024-01-19T06:30:00.000Z" -> "2024-01-19 06:30:00.000"
+      //     "2024-01-19T06:30:00" -> "2024-01-19 06:30:00"
+      let s = isoString.replace('T', ' ');
+      // .000Z 부분 제거
+      s = s.replace('.000Z', '');
+      s = s.replace('Z', '');
+      return s.trim();
     }
 
-    // 2) 리뷰 카드 컴포넌트
+    // 리뷰 카드 컴포넌트
     function ReviewCard({ review }) {
       // 별점 시각화
       const renderStars = (rating) => {
@@ -230,16 +232,15 @@
               <span className={`px-3 py-1 rounded-full text-sm ${getPlatformColor(review.platform)}`}>
                 {review.platform}
               </span>
-              {/* 작성자 (reviewer) 표시 */}
               {review.reviewer && (
                 <span className="text-blue-600 bg-blue-50 px-3 py-1 rounded-full text-sm">
                   {review.reviewer}
                 </span>
               )}
             </div>
-            {/* 날짜/시간: UTC -> 한국시각 */}
+            {/* created_at을 "그대로" 표시 (UTC -> KST 변환 없음) */}
             <span className="text-gray-600">
-              {formatKoreanTime(review.review_date)}
+              {formatRawTime(review.created_at)}
             </span>
           </div>
 
@@ -276,7 +277,7 @@
       );
     }
 
-    // 3) 전체 대시보드
+    // 전체 대시보드
     function ReviewDashboard() {
       const [stores, setStores] = useState([]);
       const [reviews, setReviews] = useState([]);
@@ -303,7 +304,7 @@
         }
       }, []);
 
-      // 3-1) 가게 목록 로드
+      // 가게 목록 로드
       async function loadStores(role, userId) {
         try {
           let query = window.supabase
@@ -333,7 +334,7 @@
         }
       }
 
-      // 3-2) 달력 생성
+      // 달력 생성
       function generateCalendar(date) {
         const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
         const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
@@ -361,16 +362,17 @@
         return weeks;
       }
 
-      // 3-3) 달력 날짜 선택
+      // 날짜 클릭
       function handleDateSelect(date) {
         setSelectedDay(date);
         setSelectedDate(date);
         loadReviews(date);
       }
 
-      // 3-4) 리뷰 로드
-      // DB가 date 타입이면 eq('YYYY-MM-DD')로 충분하지만,
-      // timestamp with time zone(UTC)라면 아래 [방법 B]처럼 범위 쿼리가 필요.
+      // 리뷰 로드 (created_at 기준)
+      // DB가 timestamptz라면 범위 조회가 일반적이나,
+      // 여기서는 간단히 "eq('DATE(created_at)', date)"를 시도하거나
+      // range query로 gte/lte를 사용합니다.
       useEffect(() => {
         loadReviews(selectedDate);
         // eslint-disable-next-line
@@ -380,23 +382,26 @@
         try {
           setLoading(true);
 
-          // [방법 A: date 타입일 때]
+          // date를 YYYY-MM-DD 형태로 만들기
           const formattedDate = date.toISOString().split("T")[0];
-          let query = window.supabase
-            .from("review_data")
-            .select("*")
-            .eq("review_date", formattedDate);
 
-          // [방법 B: UTC 범위 조회 - 주석처리. DB가 timestamptz일 때 사용 가능]
-          // const startKST = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0);
-          // const endKST = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59);
-          // const startUtc = startKST.toISOString();
-          // const endUtc = endKST.toISOString();
+          // (A) 만약 DB에 DATE(created_at)로 매칭이 가능하다면 (RPC나 뷰, raw SQL 등)
           // let query = window.supabase
           //   .from("review_data")
           //   .select("*")
-          //   .gte("review_date", startUtc)
-          //   .lte("review_date", endUtc);
+          //   .eq("DATE(created_at)", formattedDate);
+
+          // (B) 혹은 범위로 매칭: 0시 ~ 23:59:59
+          const startOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0);
+          const endOfDay   = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59);
+          const startUtc = startOfDay.toISOString();
+          const endUtc   = endOfDay.toISOString();
+
+          let query = window.supabase
+            .from("review_data")
+            .select("*")
+            .gte("created_at", startUtc)
+            .lte("created_at", endUtc);
 
           if (selectedStore !== "all") {
             query = query.eq("store_code", selectedStore);
@@ -417,7 +422,7 @@
         }
       }
 
-      // 3-5) 별점 통계 업데이트
+      // 별점 통계
       function updateStatistics(reviewData) {
         const newStats = {
           ratings: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
@@ -431,7 +436,6 @@
         setStatistics(newStats);
       }
 
-      // 3-6) 날짜를 한글로 예쁘게 표시
       function formatDate(date) {
         return new Date(date).toLocaleDateString("ko-KR", {
           year: "numeric",
@@ -567,7 +571,7 @@
       );
     }
 
-    // 4) 렌더링
+    // 렌더링
     const rootElement = document.getElementById("review-dashboard-root");
     const root = ReactDOM.createRoot(rootElement);
     root.render(<ReviewDashboard />);

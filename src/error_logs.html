@@ -317,7 +317,6 @@
     <script>
         /**
          * 1) 달력 생성
-         * - 현재 달의 날짜들을 테이블로 출력
          */
         function generateCalendar() {
             const today = new Date();
@@ -339,7 +338,10 @@
                     } else if (date > lastDay.getDate()) {
                         html += '<td></td>';
                     } else {
-                        const isToday = (date === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear());
+                        const isToday =
+                          (date === today.getDate() &&
+                           currentMonth === today.getMonth() &&
+                           currentYear === today.getFullYear());
                         html += `<td class="${isToday ? 'today' : ''}" data-date="${date}">${date}</td>`;
                         date++;
                     }
@@ -361,7 +363,8 @@
                     this.classList.add('selected');
                     
                     // (A) 날짜 문자열 생성
-                    const selectedDate = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(this.dataset.date).padStart(2, '0')}`;
+                    const selectedDate =
+                      `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(this.dataset.date).padStart(2, '0')}`;
                     // (B) 로그 데이터 조회
                     fetchLogData(selectedDate);
                 });
@@ -369,7 +372,20 @@
         }
 
         /**
-         * 2) KST 기준 날짜로 DB 조회 (UTC 범위 검색)
+         * 2) "원본 시각" 그대로 표시하기 위한 간단한 함수
+         *    DB에서 발생 시각이 "2024-01-14T06:30:00.000Z" 등으로 온다면
+         *    T, Z만 제거해서 "2024-01-14 06:30:00.000" 형태로 보여줌
+         */
+        function formatRawTime(isoString) {
+            if (!isoString) return '';
+            let s = isoString.replace('T',' ');
+            s = s.replace(/(\.\d+)?Z$/, ''); // .000Z or Z 제거
+            return s.trim();
+        }
+
+        /**
+         * 3) 로그 데이터 조회
+         *    KST 0시 ~ 23:59:59 범위를 UTC로 변환해 검색
          */
         async function fetchLogData(dateString) {
             try {
@@ -381,13 +397,13 @@
 
                 // 한국 시각으로 0시 ~ 23시59분59초
                 const startDateKST = new Date(year, month, day, 0, 0, 0);
-                const endDateKST = new Date(year, month, day, 23, 59, 59);
+                const endDateKST   = new Date(year, month, day, 23, 59, 59);
 
                 // toISOString() => UTC 변환
                 const startUtc = startDateKST.toISOString();
-                const endUtc = endDateKST.toISOString();
+                const endUtc   = endDateKST.toISOString();
 
-                // DB에서 UTC로 저장된 timestamptz를 이 범위로 검색
+                // DB에서 occurred_at이 UTC로 저장되어 있다 가정
                 const { data, error } = await supabase
                     .from('error_logs')
                     .select('*')
@@ -404,35 +420,20 @@
         }
 
         /**
-         * 3) UTC -> KST 변환 헬퍼
-         */
-        function formatKoreanTime(utcString) {
-            if (!utcString) return '';
-            return new Date(utcString).toLocaleString('ko-KR', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: false,
-                timeZone: 'Asia/Seoul'
-            });
-        }
-
-        /**
          * 4) 조회 결과 테이블에 뿌려주기
+         *    여기서 formatRawTime을 써서 "원본 시각"만 단순 표시
          */
         function updateLogTable(logs) {
             const tbody = document.getElementById('logTableBody');
             if (!logs || logs.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center">해당 날짜의 오류 로그가 없습니다.</td></tr>';
+                tbody.innerHTML =
+                  '<tr><td colspan="6" class="text-center">해당 날짜의 오류 로그가 없습니다.</td></tr>';
                 return;
             }
             tbody.innerHTML = logs.map(log => `
                 <tr>
-                    <!-- 로그 발생 시각: UTC -> KST 변환 표시 -->
-                    <td>${formatKoreanTime(log.occurred_at)}</td>
+                    <!-- 로그 발생 시각: 변환 없이 DB 원본 표시 -->
+                    <td>${formatRawTime(log.occurred_at)}</td>
                     <td><span class="badge badge-${log.category === '오류' ? 'error' : 'warning'}">${log.category}</span></td>
                     <td>${log.platform}</td>
                     <td>${log.store_name}</td>
