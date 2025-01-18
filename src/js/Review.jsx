@@ -53,14 +53,15 @@ const ReviewDashboard = () => {
         loadReviews(date);
     };
 
-    // 리뷰 데이터 로드 함수 수정
+    // 리뷰 데이터 로드 함수
     const loadReviews = async (date = selectedDate) => {
         try {
             setLoading(true);
             const formattedDate = date.toISOString().split('T')[0];
             
-            let query = supabase.from('review_data')
-                .select('*')
+            let query = supabase
+                .from('review_data')
+                .select('*') // ai_reply도 포함됨
                 .eq('review_date', formattedDate);
 
             if (selectedStore !== 'all') {
@@ -83,7 +84,23 @@ const ReviewDashboard = () => {
         }
     };
 
-    // 날짜 포맷 함수
+    // 통계 업데이트
+    const updateStatistics = (reviewData) => {
+        const newStats = {
+            ratings: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+        };
+
+        reviewData.forEach(review => {
+            const rating = parseInt(review.star_rating);
+            if (rating >= 1 && rating <= 5) {
+                newStats.ratings[rating]++;
+            }
+        });
+
+        setStatistics(newStats);
+    };
+
+    // 날짜 포맷
     const formatDate = (date) => {
         return new Date(date).toLocaleDateString('ko-KR', {
             year: 'numeric',
@@ -146,7 +163,7 @@ const ReviewDashboard = () => {
                 </div>
             </div>
 
-            {/* 기존 컴포넌트 내용 */}
+            {/* 가게 선택 (owner가 아닐 때만) */}
             {userRole !== 'owner' && (
                 <select 
                     className="w-full p-2 mb-4 border rounded"
@@ -214,6 +231,13 @@ const ReviewDashboard = () => {
                                 <span>주문메뉴: {review.order_menu}</span>
                                 <span className="ml-4">별점: {review.star_rating}점</span>
                             </div>
+
+                            {/* AI 답변 영역 */}
+                            {review.ai_reply && (
+                              <div className="mt-2 p-2 bg-gray-50">
+                                <strong>사장님 답글:</strong> {review.ai_reply}
+                              </div>
+                            )}
                         </div>
                     ))
                 )}
