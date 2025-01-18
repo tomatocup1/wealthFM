@@ -222,7 +222,9 @@
                 </span>
               )}
             </div>
-            <span className="text-gray-500 text-sm">{review.review_date}</span>
+            <span className="text-gray-600">
+            {formatKoreanTime(review.review_date)}
+            </span>
           </div>
 
           {/* 별점 */}
@@ -259,6 +261,13 @@
     }
 
     function ReviewDashboard() {
+        // 1) 헬퍼 함수
+        function formatKoreanTime(utcString) {
+            if (!utcString) return '';
+            // new Date(utcString) -> JS Date 객체
+            // toLocaleString('ko-KR', {timeZone:'Asia/Seoul'}) -> 한국 시간대 문자열
+            return new Date(utcString).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
+        }
       const [stores, setStores] = useState([]);
       const [reviews, setReviews] = useState([]);
       const [selectedStore, setSelectedStore] = useState("all");
