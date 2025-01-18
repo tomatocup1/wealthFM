@@ -1,4 +1,4 @@
-import"./chunks/supabaseClient-S2iIDnZv.js";import"./chunks/index-BQfYHZiF.js";var v={},C={exports:{}},r={};/**
+import"./chunks/supabaseClient-CAAA46mf.js";import"./chunks/index-BQfYHZiF.js";var v={},C={exports:{}},r={};/**
  * @license React
  * react.production.min.js
  *
