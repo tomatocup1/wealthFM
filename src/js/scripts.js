@@ -86,6 +86,9 @@ class PageManager {
     // 현재 페이지 메뉴 하이라이트
     highlightCurrentPage() {
         const currentPage = window.location.pathname.split('/').pop();
+        if (currentPage === 'index.html') {
+            return; // 로그인 체크 건너뛰기
+        }
         document.querySelectorAll('.nav-link').forEach(link => {
             if (link.getAttribute('href') === currentPage) {
                 link.classList.add('active');
