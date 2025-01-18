@@ -147,9 +147,6 @@
       color: #fff;
     }
 
-    /* Tailwind에서 줄바꿈을 위해 사용할 수 있는 클래스:
-       whitespace-pre-line, white-space: pre-line; */
-
     @media (max-width: 768px) {
       .nav-menu {
         display: none;
@@ -193,8 +190,75 @@
   <script type="text/babel">
     const { useState, useEffect } = React;
 
+    // 새롭게 추가된 ReviewCard 컴포넌트
+    function ReviewCard({ review }) {
+      // 별점을 이모지로 변환하는 함수
+      const renderStars = (rating) => {
+        return "⭐".repeat(rating);
+      };
+
+      // 플랫폼별 배경색 지정
+      const getPlatformColor = (platform) => {
+        switch(platform) {
+          case "배민": return "bg-blue-100";
+          case "쿠팡": return "bg-orange-100";
+          case "요기요": return "bg-red-100";
+          default: return "bg-gray-100";
+        }
+      };
+
+      return (
+        <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 border border-gray-100">
+          {/* 상단 헤더 (가게명, 플랫폼, 작성자, 리뷰 날짜) */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <span className="font-bold text-lg text-gray-800">{review.store_name}</span>
+              <span className={`px-3 py-1 rounded-full text-sm ${getPlatformColor(review.platform)}`}>
+                {review.platform}
+              </span>
+              {review.reviewer && (
+                <span className="text-blue-600 bg-blue-50 px-3 py-1 rounded-full text-sm">
+                  {review.reviewer}
+                </span>
+              )}
+            </div>
+            <span className="text-gray-500 text-sm">{review.review_date}</span>
+          </div>
+
+          {/* 별점 */}
+          <div className="mb-3 text-xl">
+            {renderStars(review.star_rating)}
+            <span className="ml-2 text-sm text-gray-600">
+              {review.star_rating}점
+            </span>
+          </div>
+
+          {/* 주문 메뉴 */}
+          <div className="mb-3 px-4 py-2 bg-purple-50 rounded-full inline-block">
+            🍽️ {review.order_menu}
+          </div>
+
+          {/* 리뷰 내용 */}
+          <div className="my-4 text-gray-700 bg-gray-50 p-4 rounded-xl whitespace-pre-line">
+            {review.review_text}
+          </div>
+
+          {/* 사장님 답글 */}
+          {review.ai_reply && (
+            <div className="mt-4 p-4 bg-yellow-50 rounded-xl border border-yellow-100">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-yellow-600 font-bold">💌 사장님 답글</span>
+              </div>
+              <div className="text-gray-700 whitespace-pre-line">
+                {review.ai_reply}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
     function ReviewDashboard() {
-      // 상태들
       const [stores, setStores] = useState([]);
       const [reviews, setReviews] = useState([]);
       const [selectedStore, setSelectedStore] = useState("all");
@@ -210,7 +274,7 @@
       const [currentMonth, setCurrentMonth] = useState(new Date());
       const [selectedDay, setSelectedDay] = useState(new Date());
 
-      // 처음 마운트 시 로그인 정보/가게 목록
+      // 마운트 시 사용자 정보 및 가게 목록 로드
       useEffect(() => {
         const userInfo = sessionStorage.getItem("userInfo");
         if (userInfo) {
@@ -220,11 +284,10 @@
         }
       }, []);
 
-      // 가게 목록 로드
+      // 가게 목록 불러오기
       async function loadStores(role, userId) {
         try {
           let query = window.supabase.from("customer_data").select("store_code, store_name");
-          
           switch (role) {
             case "admin":
               query = query.eq("admin_id", userId);
@@ -235,7 +298,6 @@
             case "owner":
               query = query.eq("store_code", userId);
               break;
-            // webmaster -> 전체
             default:
               break;
           }
@@ -247,7 +309,7 @@
         }
       }
 
-      // 달력 데이터 생성
+      // 달력 생성 로직
       function generateCalendar(date) {
         const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
         const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
@@ -257,7 +319,6 @@
         const weeks = [];
         let currentWeek = [];
         
-        // 달력 행 만들기
         for (let day = new Date(startDate); day <= lastDay; day.setDate(day.getDate() + 1)) {
           if (currentWeek.length === 7) {
             weeks.push(currentWeek);
@@ -266,7 +327,6 @@
           currentWeek.push(new Date(day));
         }
 
-        // 마지막 행 채우기
         while (currentWeek.length < 7) {
           const nextDay = new Date(currentWeek[currentWeek.length - 1]);
           nextDay.setDate(nextDay.getDate() + 1);
@@ -277,28 +337,26 @@
         return weeks;
       }
 
-      // 날짜 클릭 시
+      // 날짜 선택 시 동작
       function handleDateSelect(date) {
         setSelectedDay(date);
         setSelectedDate(date);
         loadReviews(date);
       }
 
-      // 리뷰 로드
+      // 리뷰 불러오기 (날짜/가게/플랫폼)
       useEffect(() => {
         loadReviews(selectedDate);
-      // eslint-disable-next-line
+        // eslint-disable-next-line
       }, [selectedStore, selectedPlatform]);
 
       async function loadReviews(date) {
         try {
           setLoading(true);
           const formattedDate = date.toISOString().split("T")[0];
-
-          // 여기서 reviewer(작성자), ai_reply(사장님 답글) 포함
           let query = window.supabase
             .from("review_data")
-            .select("*") 
+            .select("*")
             .eq("review_date", formattedDate);
 
           if (selectedStore !== "all") {
@@ -342,10 +400,9 @@
         });
       }
 
-      // 화면 구성
       return (
         <div className="dashboard-container p-6">
-          {/* 달력 섹션 */}
+          {/* 달력 */}
           <div className="bg-white rounded-lg p-6 shadow-md mb-6">
             <h2 className="text-xl font-bold mb-4">날짜 선택</h2>
             <div className="mb-4 flex justify-between items-center">
@@ -439,58 +496,26 @@
               <button
                 key={platform}
                 onClick={() => setPlatform(platform)}
-                className={`px-4 py-2 rounded-lg ${
-                  selectedPlatform === platform
-                    ? "bg-gray-800 text-white"
-                    : "bg-white"
-                }`}
+                className={`
+                  px-4 py-2 rounded-lg
+                  ${selectedPlatform === platform ? "bg-gray-800 text-white" : "bg-white"}
+                `}
               >
                 {platform === "all" ? "전체" : platform}
               </button>
             ))}
           </div>
 
-          {/* 리뷰 목록 */}
+          {/* 리뷰 목록 (ReviewCard 활용) */}
           <div className="space-y-4">
-            <h3 className="text-lg font-bold mb-4">
-              {formatDate(selectedDate)} 리뷰
-            </h3>
+            <h3 className="text-lg font-bold mb-4">{formatDate(selectedDate)} 리뷰</h3>
             {loading ? (
               <div className="text-center py-8">데이터를 불러오는 중...</div>
             ) : reviews.length === 0 ? (
               <div className="text-center py-8">리뷰가 없습니다.</div>
             ) : (
               reviews.map((review, i) => (
-                <div key={i} className="bg-white rounded-lg p-4 shadow-md">
-                  <div className="flex justify-between items-center mb-2">
-                    <div>
-                      <span className="font-semibold">{review.store_name}</span>
-                      <span className="ml-2 text-gray-600">{review.platform}</span>
-                      {/* 작성자명(review.reviewer) 표시 */}
-                      {review.reviewer && (
-                        <span className="ml-2 text-blue-600">({review.reviewer})</span>
-                      )}
-                    </div>
-                    <span className="text-gray-600">{review.review_date}</span>
-                  </div>
-
-                  {/* 리뷰 내용 (줄바꿈 적용) */}
-                  <div className="mb-2 whitespace-pre-line">
-                    {review.review_text}
-                  </div>
-
-                  <div className="text-gray-600">
-                    <span>주문메뉴: {review.order_menu}</span>
-                    <span className="ml-4">별점: {review.star_rating}점</span>
-                  </div>
-
-                  {/* AI 답변 (줄바꿈 적용) */}
-                  {review.ai_reply && (
-                    <div className="mt-2 p-2 bg-gray-50 rounded whitespace-pre-line">
-                      <strong>사장님 답글:</strong> {review.ai_reply}
-                    </div>
-                  )}
-                </div>
+                <ReviewCard key={i} review={review} />
               ))
             )}
           </div>
@@ -498,7 +523,7 @@
       );
     }
 
-    // ReactDOM 렌더링
+    // 렌더링
     const rootElement = document.getElementById("review-dashboard-root");
     const root = ReactDOM.createRoot(rootElement);
     root.render(<ReviewDashboard />);
@@ -511,7 +536,6 @@
       const navMenu = document.getElementById("navMenu");
 
       if (!userInfo.role) {
-        // 로그인 정보 없으면 로그인 페이지로
         window.location.href = "login.html";
       } else {
         updateMenuByRole(userInfo.role);
@@ -528,7 +552,7 @@
 
         navMenu.innerHTML = menuLinks;
 
-        // 현재 페이지 하이라이트
+        // 현재 페이지 표시
         const currentPage = window.location.pathname.split("/").pop();
         const menuItems = navMenu.querySelectorAll(".nav-link");
         menuItems.forEach((item) => {
