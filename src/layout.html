@@ -354,6 +354,7 @@
                     const dateStr = selectedDate.toISOString().split('T')[0];
                     query = query.eq('review_date', dateStr);
 
+
                     if (selectedPlatform !== 'all') {
                         query = query.eq('platform', selectedPlatform);
                     }
