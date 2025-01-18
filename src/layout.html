@@ -190,14 +190,25 @@
   <script type="text/babel">
     const { useState, useEffect } = React;
 
-    // 새롭게 추가된 ReviewCard 컴포넌트
+    /*
+      UTC를 한국 시각(UTC+9)으로 변환하는 헬퍼 함수
+      이 함수를 먼저 선언해야, 아래 컴포넌트들에서 사용 가능
+    */
+    function formatKoreanTime(utcString) {
+      if (!utcString) return '';
+      return new Date(utcString).toLocaleString('ko-KR', {
+        timeZone: 'Asia/Seoul'
+      });
+    }
+
+    // 리뷰 하나를 카드 형태로 표시하는 컴포넌트
     function ReviewCard({ review }) {
-      // 별점을 이모지로 변환하는 함수
+      // 별점 시각화
       const renderStars = (rating) => {
         return "⭐".repeat(rating);
       };
 
-      // 플랫폼별 배경색 지정
+      // 플랫폼마다 컬러
       const getPlatformColor = (platform) => {
         switch(platform) {
           case "배민": return "bg-blue-100";
@@ -216,18 +227,20 @@
               <span className={`px-3 py-1 rounded-full text-sm ${getPlatformColor(review.platform)}`}>
                 {review.platform}
               </span>
+              {/* 작성자 표기 */}
               {review.reviewer && (
                 <span className="text-blue-600 bg-blue-50 px-3 py-1 rounded-full text-sm">
                   {review.reviewer}
                 </span>
               )}
             </div>
+            {/* ★ 여기서 formatKoreanTime 사용 */}
             <span className="text-gray-600">
-            {formatKoreanTime(review.review_date)}
+              {formatKoreanTime(review.review_date)}
             </span>
           </div>
 
-          {/* 별점 */}
+          {/* 별점 표시 */}
           <div className="mb-3 text-xl">
             {renderStars(review.star_rating)}
             <span className="ml-2 text-sm text-gray-600">
@@ -245,7 +258,7 @@
             {review.review_text}
           </div>
 
-          {/* 사장님 답글 */}
+          {/* AI 답글 */}
           {review.ai_reply && (
             <div className="mt-4 p-4 bg-yellow-50 rounded-xl border border-yellow-100">
               <div className="flex items-center gap-2 mb-2">
@@ -260,14 +273,8 @@
       );
     }
 
+    // 전체 대시보드 컴포넌트
     function ReviewDashboard() {
-        // 1) 헬퍼 함수
-        function formatKoreanTime(utcString) {
-            if (!utcString) return '';
-            // new Date(utcString) -> JS Date 객체
-            // toLocaleString('ko-KR', {timeZone:'Asia/Seoul'}) -> 한국 시간대 문자열
-            return new Date(utcString).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
-        }
       const [stores, setStores] = useState([]);
       const [reviews, setReviews] = useState([]);
       const [selectedStore, setSelectedStore] = useState("all");
@@ -283,7 +290,7 @@
       const [currentMonth, setCurrentMonth] = useState(new Date());
       const [selectedDay, setSelectedDay] = useState(new Date());
 
-      // 마운트 시 사용자 정보 및 가게 목록 로드
+      // 페이지 로드 시 사용자 정보/가게 목록 로드
       useEffect(() => {
         const userInfo = sessionStorage.getItem("userInfo");
         if (userInfo) {
@@ -293,10 +300,13 @@
         }
       }, []);
 
-      // 가게 목록 불러오기
+      // 가게 목록 로드
       async function loadStores(role, userId) {
         try {
-          let query = window.supabase.from("customer_data").select("store_code, store_name");
+          let query = window.supabase
+            .from("customer_data")
+            .select("store_code, store_name");
+
           switch (role) {
             case "admin":
               query = query.eq("admin_id", userId);
@@ -308,8 +318,10 @@
               query = query.eq("store_code", userId);
               break;
             default:
+              // webmaster -> 모든 가게
               break;
           }
+
           const { data, error } = await query.order("store_name");
           if (error) throw error;
           setStores(data || []);
@@ -318,16 +330,16 @@
         }
       }
 
-      // 달력 생성 로직
+      // 달력 생성
       function generateCalendar(date) {
         const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
         const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
         const startDate = new Date(firstDay);
         startDate.setDate(startDate.getDate() - startDate.getDay());
-        
+
         const weeks = [];
         let currentWeek = [];
-        
+
         for (let day = new Date(startDate); day <= lastDay; day.setDate(day.getDate() + 1)) {
           if (currentWeek.length === 7) {
             weeks.push(currentWeek);
@@ -342,18 +354,18 @@
           currentWeek.push(nextDay);
         }
         weeks.push(currentWeek);
-        
+
         return weeks;
       }
 
-      // 날짜 선택 시 동작
+      // 날짜 선택
       function handleDateSelect(date) {
         setSelectedDay(date);
         setSelectedDate(date);
         loadReviews(date);
       }
 
-      // 리뷰 불러오기 (날짜/가게/플랫폼)
+      // 리뷰 로드 (selectedDate, selectedStore, selectedPlatform)
       useEffect(() => {
         loadReviews(selectedDate);
         // eslint-disable-next-line
@@ -387,7 +399,7 @@
         }
       }
 
-      // 별점 통계 업데이트
+      // 별점 통계 계산
       function updateStatistics(reviewData) {
         const newStats = {
           ratings: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
@@ -401,6 +413,7 @@
         setStatistics(newStats);
       }
 
+      // 달력 위에 표시할 날짜 포맷
       function formatDate(date) {
         return new Date(date).toLocaleDateString("ko-KR", {
           year: "numeric",
@@ -411,7 +424,7 @@
 
       return (
         <div className="dashboard-container p-6">
-          {/* 달력 */}
+          {/* 달력 영역 */}
           <div className="bg-white rounded-lg p-6 shadow-md mb-6">
             <h2 className="text-xl font-bold mb-4">날짜 선택</h2>
             <div className="mb-4 flex justify-between items-center">
@@ -468,7 +481,7 @@
             </div>
           </div>
 
-          {/* 가게 선택 (owner가 아닐 때만) */}
+          {/* 가게 선택 (owner 제외) */}
           {userRole !== "owner" && (
             <select
               className="w-full p-2 mb-4 border rounded"
@@ -484,7 +497,7 @@
             </select>
           )}
 
-          {/* 통계 섹션 */}
+          {/* 별점 통계 */}
           <div className="bg-white rounded-lg p-6 shadow-md mb-6">
             <h2 className="text-xl font-bold mb-4">별점 통계</h2>
             <div className="grid grid-cols-5 gap-4">
@@ -515,15 +528,18 @@
             ))}
           </div>
 
-          {/* 리뷰 목록 (ReviewCard 활용) */}
+          {/* 리뷰 목록 */}
           <div className="space-y-4">
-            <h3 className="text-lg font-bold mb-4">{formatDate(selectedDate)} 리뷰</h3>
+            <h3 className="text-lg font-bold mb-4">
+              {formatDate(selectedDate)} 리뷰
+            </h3>
             {loading ? (
               <div className="text-center py-8">데이터를 불러오는 중...</div>
             ) : reviews.length === 0 ? (
               <div className="text-center py-8">리뷰가 없습니다.</div>
             ) : (
               reviews.map((review, i) => (
+                // ReviewCard로 한 건씩 표시
                 <ReviewCard key={i} review={review} />
               ))
             )}
@@ -532,7 +548,7 @@
       );
     }
 
-    // 렌더링
+    // ReactDOM 렌더링
     const rootElement = document.getElementById("review-dashboard-root");
     const root = ReactDOM.createRoot(rootElement);
     root.render(<ReviewDashboard />);
@@ -544,6 +560,7 @@
       const userInfo = JSON.parse(sessionStorage.getItem("userInfo") || "{}");
       const navMenu = document.getElementById("navMenu");
 
+      // 로그인 안 되어 있으면 login.html로
       if (!userInfo.role) {
         window.location.href = "login.html";
       } else {
@@ -561,7 +578,7 @@
 
         navMenu.innerHTML = menuLinks;
 
-        // 현재 페이지 표시
+        // 현재 페이지 활성화
         const currentPage = window.location.pathname.split("/").pop();
         const menuItems = navMenu.querySelectorAll(".nav-link");
         menuItems.forEach((item) => {
