@@ -19,8 +19,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     /* 실제 프로젝트 키로 교체해 사용 */
-    const SUPABASE_URL = "https://xyzysbfukemhbmprtzto.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5enlzYmZ1a2VtaGJtcHJ0enRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzYxNTg4NjIsImV4cCI6MjA1MTczNDg2Mn0.DTRZM9WcXNhILGGGL4BJR40-snEh6Fna008hAGsExbY";
+    const SUPABASE_URL = "https://xxxxx.supabase.co";
+    const SUPABASE_ANON_KEY = "public-anon-key";
     window.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   </script>
 
@@ -146,6 +146,9 @@
       background-color: var(--accent-color);
       color: #fff;
     }
+
+    /* Tailwind에서 줄바꿈을 위해 사용할 수 있는 클래스:
+       whitespace-pre-line, white-space: pre-line; */
 
     @media (max-width: 768px) {
       .nav-menu {
@@ -292,9 +295,10 @@
           setLoading(true);
           const formattedDate = date.toISOString().split("T")[0];
 
+          // 여기서 reviewer(작성자), ai_reply(사장님 답글) 포함
           let query = window.supabase
             .from("review_data")
-            .select("*")
+            .select("*") 
             .eq("review_date", formattedDate);
 
           if (selectedStore !== "all") {
@@ -462,19 +466,28 @@
                     <div>
                       <span className="font-semibold">{review.store_name}</span>
                       <span className="ml-2 text-gray-600">{review.platform}</span>
+                      {/* 작성자명(review.reviewer) 표시 */}
+                      {review.reviewer && (
+                        <span className="ml-2 text-blue-600">({review.reviewer})</span>
+                      )}
                     </div>
                     <span className="text-gray-600">{review.review_date}</span>
                   </div>
-                  <div className="mb-2">{review.review_text}</div>
+
+                  {/* 리뷰 내용 (줄바꿈 적용) */}
+                  <div className="mb-2 whitespace-pre-line">
+                    {review.review_text}
+                  </div>
+
                   <div className="text-gray-600">
                     <span>주문메뉴: {review.order_menu}</span>
                     <span className="ml-4">별점: {review.star_rating}점</span>
                   </div>
 
-                  {/* AI 답변이 있을 경우 표시 (review.ai_reply 컬럼) */}
+                  {/* AI 답변 (줄바꿈 적용) */}
                   {review.ai_reply && (
-                    <div className="mt-2 p-2 bg-gray-50 rounded">
-                      <strong>사장님 답글: </strong>{review.ai_reply}
+                    <div className="mt-2 p-2 bg-gray-50 rounded whitespace-pre-line">
+                      <strong>사장님 답글:</strong> {review.ai_reply}
                     </div>
                   )}
                 </div>

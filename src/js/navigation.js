@@ -14,6 +14,13 @@ class NavigationManager {
         try {
             // 세션 체크
             this.userInfo = checkSession();
+            // 페이지 이름이 index.html이면 세션 없다고 해도 그냥 통과
+            const currentPage = window.location.pathname.split('/').pop();
+            if (currentPage === 'index.html') {
+                // return 하거나, userInfo 안 쓰도록
+                return;
+            }
+            
             if (!this.userInfo) {
                 window.location.href = 'login.html';
                 return;

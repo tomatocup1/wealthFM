@@ -11,6 +11,10 @@ class PageManager {
 
     // 페이지 초기화
     async initializePage() {
+       const currentPage = window.location.pathname.split('/').pop();
+       if (currentPage === 'index.html') {
+           return; // index.html은 아무것도 안 한다
+       }
         try {
             // 1. 세션 체크
             this.userInfo = this.checkSession();
@@ -184,7 +188,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // (pageManager.initializePage() 호출도 안 할 수 있음)
         return;
     }
-    
+
     const pageManager = new PageManager();
     pageManager.initializePage();
     
