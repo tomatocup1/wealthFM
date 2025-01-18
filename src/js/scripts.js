@@ -26,7 +26,7 @@ class PageManager {
             this.setupEventListeners();
 
             // 5. React 컴포넌트 초기화
-            this.initializeReactComponents();
+            //this.initializeReactComponents();
 
         } catch (error) {
             console.error('페이지 초기화 실패:', error);
@@ -150,18 +150,18 @@ class PageManager {
     }
 
     // React 컴포넌트 초기화
-    initializeReactComponents() {
-        const container = document.getElementById('review-dashboard-root');
-        if (container && window.ReviewDashboard) {
-            const root = ReactDOM.createRoot(container);
-            root.render(React.createElement(window.ReviewDashboard, {
-                initialStore: this.currentStore,
-                initialPlatform: this.currentPlatform,
-                initialDate: this.currentDate,
-                userRole: this.userInfo.role
-            }));
-        }
-    }
+    //initializeReactComponents() {
+    //    const container = document.getElementById('review-dashboard-root');
+    //    if (container && window.ReviewDashboard) {
+    //        const root = ReactDOM.createRoot(container);
+    //        root.render(React.createElement(window.ReviewDashboard, {
+    //            initialStore: this.currentStore,
+    //            initialPlatform: this.currentPlatform,
+    //            initialDate: this.currentDate,
+    //            userRole: this.userInfo.role
+    //        }));
+    //    }
+    //}
 
     // 리뷰 표시 업데이트
     async updateReviewDisplay() {

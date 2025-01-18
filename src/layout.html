@@ -32,14 +32,11 @@
     </script>
 
     <!-- 페이지 초기화 스크립트 -->
-    <script type="module">
-        import { initializePage } from './js/init.js';
-
-        document.addEventListener('DOMContentLoaded', () => {
-            initializePage();
-        });
-    </script>
-
+    <!--
+    <script type="module" src="/js/init.js"></script>
+    <script type="module" src="/js/scripts.js"></script>
+    -->
+    
     <style>
         /* 1. 변수 정의 */
         :root {
@@ -307,171 +304,171 @@
         const [currentMonth, setCurrentMonth] = useState(new Date());
         const [selectedDay, setSelectedDay] = useState(new Date());
 
-            // 사용자 정보 및 가게 목록 로드
-            useEffect(() => {
-                const userInfo = JSON.parse(sessionStorage.getItem('userInfo'));
-                if (userInfo) {
-                    setUserRole(userInfo.role);
-                    loadStores(userInfo.role, userInfo.id);
+        // 사용자 정보 및 가게 목록 로드
+        useEffect(() => {
+            const userInfo = JSON.parse(sessionStorage.getItem('userInfo'));
+            if (userInfo) {
+                setUserRole(userInfo.role);
+                loadStores(userInfo.role, userInfo.id);
+            }
+        }, []);
+
+        // 가게 목록 로드 함수
+        const loadStores = async (role, userId) => {
+            try {
+                let query = supabase.from('customer_data').select('store_code, store_name');
+                
+                switch (role) {
+                    case 'admin':
+                        query = query.eq('admin_id', userId);
+                        break;
+                    case 'franchise':
+                        query = query.eq('franchise_id', userId);
+                        break;
+                    case 'owner':
+                        query = query.eq('store_code', userId);
+                        break;
                 }
-            }, []);
 
-            // 가게 목록 로드 함수
-            const loadStores = async (role, userId) => {
-                try {
-                    let query = supabase.from('customer_data').select('store_code, store_name');
-                    
-                    switch (role) {
-                        case 'admin':
-                            query = query.eq('admin_id', userId);
-                            break;
-                        case 'franchise':
-                            query = query.eq('franchise_id', userId);
-                            break;
-                        case 'owner':
-                            query = query.eq('store_code', userId);
-                            break;
-                    }
-
-                    const { data, error } = await query.order('store_name');
-                    if (error) throw error;
-                    setStores(data || []);
-                } catch (error) {
-                    console.error('가게 목록 로드 실패:', error);
-                }
-            };
-
-            // 리뷰 데이터 로드
-            useEffect(() => {
-                const loadReviews = async () => {
-                    try {
-                        setLoading(true);
-                        let query = supabase.from('review_data')
-                            .select('*')
-                            .order('review_date', { ascending: false });
-
-                        if (selectedStore !== 'all') {
-                            query = query.eq('store_code', selectedStore);
-                        }
-
-                        const dateStr = selectedDate.toISOString().split('T')[0];
-                        query = query.eq('review_date', dateStr);
-
-                        if (selectedPlatform !== 'all') {
-                            query = query.eq('platform', selectedPlatform);
-                        }
-
-                        const { data, error } = await query;
-                        if (error) throw error;
-
-                        setReviews(data || []);
-                        updateStatistics(data || []);
-                    } catch (error) {
-                        console.error('리뷰 로드 실패:', error);
-                    } finally {
-                        setLoading(false);
-                    }
-                };
-
-                loadReviews();
-            }, [selectedStore, selectedDate, selectedPlatform]);
-
-            // 통계 업데이트
-            const updateStatistics = (reviewData) => {
-                const newStats = {
-                    ratings: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
-                };
-
-                reviewData.forEach(review => {
-                    const rating = parseInt(review.star_rating);
-                    if (rating >= 1 && rating <= 5) {
-                        newStats.ratings[rating]++;
-                    }
-                });
-
-                setStatistics(newStats);
-            };
-
-            return (
-                <div className="dashboard-container p-6">
-                    {/* 가게 선택 */}
-                    {userRole !== 'owner' && (
-                        <select 
-                            className="w-full p-2 mb-4 border rounded"
-                            value={selectedStore}
-                            onChange={(e) => setSelectedStore(e.target.value)}
-                        >
-                            <option value="all">전체 가게</option>
-                            {stores.map(store => (
-                                <option key={store.store_code} value={store.store_code}>
-                                    {store.store_name}
-                                </option>
-                            ))}
-                        </select>
-                    )}
-
-                    {/* 별점 통계 */}
-                    <div className="bg-white rounded-lg p-6 shadow-md mb-6">
-                        <h2 className="text-xl font-bold mb-4">별점 통계</h2>
-                        <div className="grid grid-cols-5 gap-4">
-                            {[5,4,3,2,1].map(rating => (
-                                <div key={rating} className="text-center p-4 bg-gray-50 rounded-lg">
-                                    <div className="text-2xl font-bold">{statistics.ratings[rating]}</div>
-                                    <div className="text-gray-600">{rating}점</div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* 플랫폼 필터 */}
-                    <div className="flex gap-4 mb-6">
-                        {['all', '배민', '쿠팡', '요기요'].map(platform => (
-                            <button 
-                                key={platform}
-                                onClick={() => setPlatform(platform)}
-                                className={`px-4 py-2 rounded-lg ${
-                                    selectedPlatform === platform 
-                                        ? 'bg-gray-800 text-white' 
-                                        : 'bg-white'
-                                }`}
-                            >
-                                {platform === 'all' ? '전체' : platform}
-                            </button>
-                        ))}
-                    </div>
-
-                    {/* 리뷰 목록 */}
-                    <div className="space-y-4">
-                        {loading ? (
-                            <div className="text-center py-8">데이터를 불러오는 중...</div>
-                        ) : reviews.length === 0 ? (
-                            <div className="text-center py-8">리뷰가 없습니다.</div>
-                        ) : (
-                            reviews.map((review, index) => (
-                                <div key={index} className="bg-white rounded-lg p-4 shadow-md">
-                                    <div className="flex justify-between items-center mb-2">
-                                        <div>
-                                            <span className="font-semibold">{review.store_name}</span>
-                                            <span className="ml-2 text-gray-600">{review.platform}</span>
-                                        </div>
-                                        <span className="text-gray-600">{review.review_date}</span>
-                                    </div>
-                                    <div className="mb-2">{review.review_text}</div>
-                                    <div className="text-gray-600">
-                                        <span>주문메뉴: {review.order_menu}</span>
-                                        <span className="ml-4">별점: {review.star_rating}점</span>
-                                    </div>
-                                </div>
-                            ))
-                        )}
-                    </div>
-                </div>
-            );
+                const { data, error } = await query.order('store_name');
+                if (error) throw error;
+                setStores(data || []);
+            } catch (error) {
+                console.error('가게 목록 로드 실패:', error);
+            }
         };
 
-        // React 컴포넌트 렌더링
-        const root = ReactDOM.createRoot(document.getElementById('review-dashboard-root'));
-        root.render(<ReviewDashboard />);
+        // 리뷰 데이터 로드
+        useEffect(() => {
+            const loadReviews = async () => {
+                try {
+                    setLoading(true);
+                    let query = supabase.from('review_data')
+                        .select('*')
+                        .order('review_date', { ascending: false });
+
+                    if (selectedStore !== 'all') {
+                        query = query.eq('store_code', selectedStore);
+                    }
+
+                    const dateStr = selectedDate.toISOString().split('T')[0];
+                    query = query.eq('review_date', dateStr);
+
+                    if (selectedPlatform !== 'all') {
+                        query = query.eq('platform', selectedPlatform);
+                    }
+
+                    const { data, error } = await query;
+                    if (error) throw error;
+
+                    setReviews(data || []);
+                    updateStatistics(data || []);
+                } catch (error) {
+                    console.error('리뷰 로드 실패:', error);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            loadReviews();
+        }, [selectedStore, selectedDate, selectedPlatform]);
+
+        // 통계 업데이트
+        const updateStatistics = (reviewData) => {
+            const newStats = {
+                ratings: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+            };
+
+            reviewData.forEach(review => {
+                const rating = parseInt(review.star_rating);
+                if (rating >= 1 && rating <= 5) {
+                    newStats.ratings[rating]++;
+                }
+            });
+
+            setStatistics(newStats);
+        };
+
+        return (
+            <div className="dashboard-container p-6">
+                {/* 가게 선택 */}
+                {userRole !== 'owner' && (
+                    <select 
+                        className="w-full p-2 mb-4 border rounded"
+                        value={selectedStore}
+                        onChange={(e) => setSelectedStore(e.target.value)}
+                    >
+                        <option value="all">전체 가게</option>
+                        {stores.map(store => (
+                            <option key={store.store_code} value={store.store_code}>
+                                {store.store_name}
+                            </option>
+                        ))}
+                    </select>
+                )}
+
+                {/* 별점 통계 */}
+                <div className="bg-white rounded-lg p-6 shadow-md mb-6">
+                    <h2 className="text-xl font-bold mb-4">별점 통계</h2>
+                    <div className="grid grid-cols-5 gap-4">
+                        {[5,4,3,2,1].map(rating => (
+                            <div key={rating} className="text-center p-4 bg-gray-50 rounded-lg">
+                                <div className="text-2xl font-bold">{statistics.ratings[rating]}</div>
+                                <div className="text-gray-600">{rating}점</div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* 플랫폼 필터 */}
+                <div className="flex gap-4 mb-6">
+                    {['all', '배민', '쿠팡', '요기요'].map(platform => (
+                        <button 
+                            key={platform}
+                            onClick={() => setPlatform(platform)}
+                            className={`px-4 py-2 rounded-lg ${
+                                selectedPlatform === platform 
+                                    ? 'bg-gray-800 text-white' 
+                                    : 'bg-white'
+                            }`}
+                        >
+                            {platform === 'all' ? '전체' : platform}
+                        </button>
+                    ))}
+                </div>
+
+                {/* 리뷰 목록 */}
+                <div className="space-y-4">
+                    {loading ? (
+                        <div className="text-center py-8">데이터를 불러오는 중...</div>
+                    ) : reviews.length === 0 ? (
+                        <div className="text-center py-8">리뷰가 없습니다.</div>
+                    ) : (
+                        reviews.map((review, index) => (
+                            <div key={index} className="bg-white rounded-lg p-4 shadow-md">
+                                <div className="flex justify-between items-center mb-2">
+                                    <div>
+                                        <span className="font-semibold">{review.store_name}</span>
+                                        <span className="ml-2 text-gray-600">{review.platform}</span>
+                                    </div>
+                                    <span className="text-gray-600">{review.review_date}</span>
+                                </div>
+                                <div className="mb-2">{review.review_text}</div>
+                                <div className="text-gray-600">
+                                    <span>주문메뉴: {review.order_menu}</span>
+                                    <span className="ml-4">별점: {review.star_rating}점</span>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+            </div>
+        );
+    };
+
+    // React 컴포넌트 렌더링
+    const root = ReactDOM.createRoot(document.getElementById('review-dashboard-root'));
+    root.render(<ReviewDashboard />);
     </script>
 
     <!-- 네비게이션 권한 관리 -->
@@ -508,6 +505,6 @@
                 });
             }
         });
-</script>
+    </script>
 </body>
 </html>

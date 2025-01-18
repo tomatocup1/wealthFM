@@ -6,7 +6,7 @@ export function initializePage() {
     // DOM 요소 초기화 작업 (예: Root 영역에 기본 내용 추가)
     const rootElement = document.getElementById('review-dashboard-root');
     if (rootElement) {
-        rootElement.innerHTML = '<p>초기화 완료!</p>';
+        // rootElement.innerHTML = '<p>초기화 완료!</p>';
     }
 
     // 역할 선택 이벤트
