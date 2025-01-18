@@ -218,6 +218,7 @@
 <body>
     
     <script>
+        // Supabase 초기화
         const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
         const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
         const supabase = supabase.createClient(supabaseUrl, supabaseKey)
@@ -314,7 +315,10 @@
     </div>
 
     <script>
-        // 캘린더 생성
+        /**
+         * 1) 캘린더 생성
+         * - 현재 달의 날짜들을 테이블로 출력
+         */
         function generateCalendar() {
             const today = new Date();
             const currentMonth = today.getMonth();
@@ -363,13 +367,18 @@
             });
         }
 
-        // 로그 데이터 조회
+        /**
+         * 2) Supabase에서 에러 로그 데이터 조회
+         * - timestamptz(UTC) 컬럼을 위해 occurred_at 컬럼을 기준으로 조회
+         * - 'DATE(occurred_at)' 부분은 UTC 기준이므로 한국 시각과 날짜가 달라질 수 있음
+         *   필요 시 range 조건 (BETWEEN ...) 사용 가능
+         */
         async function fetchLogData(date) {
             try {
                 const { data, error } = await supabase
                     .from('error_logs')
                     .select('*')
-                    .eq('DATE(occurred_at)', date)
+                    .eq('DATE(occurred_at)', date)  // DB에서 UTC 날짜를 기반으로 필터
                     .order('occurred_at', { ascending: false });
 
                 if (error) throw error;
@@ -379,13 +388,28 @@
                 console.error('Error fetching logs:', error);
             }
         }
-        // error_logs.js
+
+        /**
+         * 3) UTC -> KST 변환 헬퍼
+         * - DB에 UTC로 저장된 occurred_at을 KST로 변환
+         */
         function formatKoreanTime(utcString) {
-        if (!utcString) return '';
-        return new Date(utcString).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
+            if (!utcString) return '';
+            return new Date(utcString).toLocaleString('ko-KR', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false,
+                timeZone: 'Asia/Seoul'
+            });
         }
 
-        // 로그 테이블 업데이트
+        /**
+         * 4) 조회 결과 테이블에 뿌려주기
+         */
         function updateLogTable(logs) {
             const tbody = document.getElementById('logTableBody');
             if (!logs || logs.length === 0) {
@@ -404,10 +428,13 @@
             `).join('');
         }
 
-        // 초기화
+        // 초기 실행 (페이지 로드 시)
         generateCalendar();
 
-        // 검색 및 필터링 이벤트
+        /**
+         * 5) 검색 기능
+         * - 매장명, 에러 메시지 등에 포괄적으로 검색
+         */
         document.querySelector('.search-input').addEventListener('input', function(e) {
             const searchTerm = e.target.value.toLowerCase();
             const rows = document.querySelectorAll('#logTableBody tr');
@@ -418,6 +445,9 @@
             });
         });
 
+        /**
+         * 6) 필터링(플랫폼, 카테고리)
+         */
         document.querySelectorAll('.filter-select').forEach(select => {
             select.addEventListener('change', function() {
                 const platformFilter = document.querySelectorAll('.filter-select')[0].value;
@@ -435,32 +465,32 @@
             });
         });
     </script>
+
     <script>
+        /**
+         * 7) 사용자 권한에 따른 메뉴 항목 설정
+         */
         document.addEventListener('DOMContentLoaded', function() {
-    const userInfo = JSON.parse(sessionStorage.getItem('userInfo')); // 사용자 정보 가져오기
-    const navMenu = document.getElementById('navMenu'); // 네비게이션 메뉴 엘리먼트
+            const userInfo = JSON.parse(sessionStorage.getItem('userInfo'));
+            const navMenu = document.getElementById('navMenu');
 
-    // 사용자 권한에 따라 메뉴 항목 설정
-    if (!userInfo) {
-        window.location.href = 'login.html'; // 사용자 정보가 없다면 로그인 페이지로 리다이렉트
-    } else {
-        updateMenuByRole(userInfo.role); // 사용자 역할에 따라 메뉴 업데이트
-    }
+            if (!userInfo) {
+                window.location.href = 'login.html';
+            } else {
+                updateMenuByRole(userInfo.role);
+            }
 
-    function updateMenuByRole(role) {
-        let links = `<a href="layout.html" class="nav-link">리뷰 모아보기</a>`; // 모든 사용자에게 표시
-
-        if (role === 'webmaster' || role === 'admin') {
-            links += `<a href="customer_data.html" class="nav-link">고객 데이터 관리</a>`;
-        }
-        if (role === 'webmaster') {
-            links += `<a href="error_logs.html" class="nav-link">에러 로그</a>`;
-        }
-
-        navMenu.innerHTML = links; // HTML에 메뉴 항목 추가
-    }
-});
-
+            function updateMenuByRole(role) {
+                let links = `<a href="layout.html" class="nav-link">리뷰 모아보기</a>`;
+                if (role === 'webmaster' || role === 'admin') {
+                    links += `<a href="customer_data.html" class="nav-link">고객 데이터 관리</a>`;
+                }
+                if (role === 'webmaster') {
+                    links += `<a href="error_logs.html" class="nav-link">에러 로그</a>`;
+                }
+                navMenu.innerHTML = links;
+            }
+        });
     </script>
 </body>
 </html>

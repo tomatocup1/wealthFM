@@ -24,11 +24,11 @@
     window.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   </script>
 
-  <!-- 폰트 (필요하면) -->
+  <!-- 폰트 (선택사항) -->
   <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
 
   <style>
-    /* 1. 변수 정의 */
+    /* ===== 1. CSS 변수 & 기본 스타일 ===== */
     :root {
       --primary-color: #FFB6C1;
       --secondary-color: #FFF0F5;
@@ -44,7 +44,6 @@
       --spacing-lg: 1.5rem;
     }
 
-    /* 2. 기본 스타일 */
     body {
       font-family: 'Arial', sans-serif;
       background-color: var(--background-color);
@@ -53,7 +52,7 @@
       line-height: 1.6;
     }
 
-    /* 3. 네비게이션 스타일 */
+    /* ===== 2. 네비게이션 ===== */
     .navbar {
       background-color: #ffffff;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -108,7 +107,7 @@
       font-family: 'Arial', sans-serif;
     }
 
-    /* 4. 메인 콘텐츠 스타일 */
+    /* ===== 3. 메인 콘텐츠 ===== */
     .main-content {
       margin-top: 80px;
       padding: var(--spacing-lg);
@@ -117,7 +116,6 @@
       margin-right: auto;
     }
 
-    /* 대시보드 컨테이너 */
     .dashboard-container {
       background: white;
       border-radius: var(--border-radius);
@@ -181,7 +179,7 @@
     </div>
   </nav>
 
-  <!-- 메인 콘텐츠 -->
+  <!-- 메인 콘텐츠 영역 -->
   <main class="main-content">
     <div id="review-dashboard-root"></div>
   </main>
@@ -190,25 +188,29 @@
   <script type="text/babel">
     const { useState, useEffect } = React;
 
-    /*
-      UTC를 한국 시각(UTC+9)으로 변환하는 헬퍼 함수
-      이 함수를 먼저 선언해야, 아래 컴포넌트들에서 사용 가능
-    */
+    // 1) UTC -> 한국시각 변환 함수
     function formatKoreanTime(utcString) {
       if (!utcString) return '';
       return new Date(utcString).toLocaleString('ko-KR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
         timeZone: 'Asia/Seoul'
       });
     }
 
-    // 리뷰 하나를 카드 형태로 표시하는 컴포넌트
+    // 2) 리뷰 카드 컴포넌트
     function ReviewCard({ review }) {
       // 별점 시각화
       const renderStars = (rating) => {
         return "⭐".repeat(rating);
       };
 
-      // 플랫폼마다 컬러
+      // 플랫폼 색상
       const getPlatformColor = (platform) => {
         switch(platform) {
           case "배민": return "bg-blue-100";
@@ -220,27 +222,26 @@
 
       return (
         <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 border border-gray-100">
-          {/* 상단 헤더 (가게명, 플랫폼, 작성자, 리뷰 날짜) */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <span className="font-bold text-lg text-gray-800">{review.store_name}</span>
               <span className={`px-3 py-1 rounded-full text-sm ${getPlatformColor(review.platform)}`}>
                 {review.platform}
               </span>
-              {/* 작성자 표기 */}
+              {/* 작성자 (reviewer) 표시 */}
               {review.reviewer && (
                 <span className="text-blue-600 bg-blue-50 px-3 py-1 rounded-full text-sm">
                   {review.reviewer}
                 </span>
               )}
             </div>
-            {/* ★ 여기서 formatKoreanTime 사용 */}
+            {/* 날짜/시간: UTC -> 한국시각 */}
             <span className="text-gray-600">
               {formatKoreanTime(review.review_date)}
             </span>
           </div>
 
-          {/* 별점 표시 */}
+          {/* 별점 */}
           <div className="mb-3 text-xl">
             {renderStars(review.star_rating)}
             <span className="ml-2 text-sm text-gray-600">
@@ -253,12 +254,12 @@
             🍽️ {review.order_menu}
           </div>
 
-          {/* 리뷰 내용 */}
+          {/* 리뷰 내용 (줄바꿈 적용) */}
           <div className="my-4 text-gray-700 bg-gray-50 p-4 rounded-xl whitespace-pre-line">
             {review.review_text}
           </div>
 
-          {/* AI 답글 */}
+          {/* AI 답글 (줄바꿈 적용) */}
           {review.ai_reply && (
             <div className="mt-4 p-4 bg-yellow-50 rounded-xl border border-yellow-100">
               <div className="flex items-center gap-2 mb-2">
@@ -273,7 +274,7 @@
       );
     }
 
-    // 전체 대시보드 컴포넌트
+    // 3) 전체 대시보드
     function ReviewDashboard() {
       const [stores, setStores] = useState([]);
       const [reviews, setReviews] = useState([]);
@@ -286,11 +287,11 @@
       });
       const [loading, setLoading] = useState(true);
 
-      // 달력을 위한 상태
+      // 달력
       const [currentMonth, setCurrentMonth] = useState(new Date());
       const [selectedDay, setSelectedDay] = useState(new Date());
 
-      // 페이지 로드 시 사용자 정보/가게 목록 로드
+      // 페이지 로드 시: 사용자 정보 & 가게 목록
       useEffect(() => {
         const userInfo = sessionStorage.getItem("userInfo");
         if (userInfo) {
@@ -318,7 +319,7 @@
               query = query.eq("store_code", userId);
               break;
             default:
-              // webmaster -> 모든 가게
+              // webmaster -> 전체
               break;
           }
 
@@ -358,14 +359,14 @@
         return weeks;
       }
 
-      // 날짜 선택
+      // 날짜 클릭
       function handleDateSelect(date) {
         setSelectedDay(date);
         setSelectedDate(date);
         loadReviews(date);
       }
 
-      // 리뷰 로드 (selectedDate, selectedStore, selectedPlatform)
+      // 리뷰 로드 (selectedDate, selectedStore, selectedPlatform 바뀔 때)
       useEffect(() => {
         loadReviews(selectedDate);
         // eslint-disable-next-line
@@ -399,7 +400,7 @@
         }
       }
 
-      // 별점 통계 계산
+      // 별점 통계
       function updateStatistics(reviewData) {
         const newStats = {
           ratings: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
@@ -407,13 +408,12 @@
         reviewData.forEach((r) => {
           const rating = parseInt(r.star_rating, 10);
           if (rating >= 1 && rating <= 5) {
-            newStats.ratings[rating]++;
+            newStats.ratings[rating] += 1;
           }
         });
         setStatistics(newStats);
       }
 
-      // 달력 위에 표시할 날짜 포맷
       function formatDate(date) {
         return new Date(date).toLocaleDateString("ko-KR", {
           year: "numeric",
@@ -424,7 +424,7 @@
 
       return (
         <div className="dashboard-container p-6">
-          {/* 달력 영역 */}
+          {/* 달력 */}
           <div className="bg-white rounded-lg p-6 shadow-md mb-6">
             <h2 className="text-xl font-bold mb-4">날짜 선택</h2>
             <div className="mb-4 flex justify-between items-center">
@@ -539,7 +539,6 @@
               <div className="text-center py-8">리뷰가 없습니다.</div>
             ) : (
               reviews.map((review, i) => (
-                // ReviewCard로 한 건씩 표시
                 <ReviewCard key={i} review={review} />
               ))
             )}
@@ -548,7 +547,7 @@
       );
     }
 
-    // ReactDOM 렌더링
+    // 4) 렌더링
     const rootElement = document.getElementById("review-dashboard-root");
     const root = ReactDOM.createRoot(rootElement);
     root.render(<ReviewDashboard />);
@@ -557,7 +556,14 @@
   <!-- 네비게이션 권한 관리 -->
   <script>
     document.addEventListener("DOMContentLoaded", function () {
-      const userInfo = JSON.parse(sessionStorage.getItem("userInfo") || "{}");
+      const userRaw = sessionStorage.getItem("userInfo") || "{}";
+      let userInfo;
+      try {
+        userInfo = JSON.parse(userRaw);
+      } catch(e) {
+        userInfo = {};
+      }
+
       const navMenu = document.getElementById("navMenu");
 
       // 로그인 안 되어 있으면 login.html로
