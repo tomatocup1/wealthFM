@@ -216,6 +216,8 @@
             cursor: pointer;
             color: var(--text-color);
         }
+
+        /* 모바일 반응형 스타일 */
         @media (max-width: 768px) {
             .hamburger-menu {
                 display: block;
@@ -238,14 +240,9 @@
                 display: block;
             }
 
-            .nav-links {
-                display: flex;
-                flex-direction: column;
-                gap: 1rem;
-            }
-
             .nav-link {
                 display: block;
+                width: 100%;
                 padding: 0.75rem 1rem;
                 border-bottom: 1px solid #eee;
             }
@@ -254,12 +251,12 @@
             .nav-link.active {
                 background-color: var(--accent-color);
                 color: white;
-                border-radius: 4px;
+            }
+
+            .nav-link:last-child {
+                border-bottom: none;
             }
         
-        .nav-link:last-child {
-            border-bottom: none;
-        }
 
         .role-select {
             font-size: 14px;
@@ -293,32 +290,32 @@
     <!-- 네비게이션 바 -->
     <nav class="navbar">
         <div class="nav-content">
-        <!-- 로고 -->
-        <div class="nav-brand">부의 정석</div>
+            <!-- 로고 -->
+            <div class="nav-brand">부의 정석</div>
     
-        <!-- 햄버거 메뉴 버튼 (모바일) -->
-        <button type="button" class="hamburger-menu md:hidden" aria-label="메뉴 열기">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-6 h-6">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-            </svg>
-        </button>
+            <!-- 햄버거 메뉴 버튼 -->
+            <button type="button" class="hamburger-menu" aria-label="메뉴 열기">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
     
-        <!-- 네비게이션 메뉴 -->
-        <div class="nav-menu" id="navMenu">
-            <div class="nav-links">
-            <a href="layout.html" class="nav-link">리뷰 모아보기</a>
-            <a href="customer_data.html" class="nav-link">고객 데이터 관리</a>
-            <a href="error_logs.html" class="nav-link">에러 로그</a>
+            <!-- 네비게이션 메뉴 -->
+            <div class="nav-menu" id="navMenu">
+                <a href="layout.html" class="nav-link">리뷰 모아보기</a>
+                <a href="customer_data.html" class="nav-link">고객 데이터 관리</a>
+                <a href="error_logs.html" class="nav-link">에러 로그</a>
             </div>
-        </div>
     
-        <!-- 역할 선택 -->
-        <select class="role-select" id="roleSelect">
-            <option value="webmaster">웹마스터</option>
-            <option value="admin">관리자</option>
-            <option value="franchise">프랜차이즈</option>
-            <option value="owner">점주님</option>
-        </select>
+            <!-- 역할 선택 -->
+            <select class="role-select" id="roleSelect">
+                <option value="webmaster">웹마스터</option>
+                <option value="admin">관리자</option>
+                <option value="franchise">프랜차이즈</option>
+                <option value="owner">점주님</option>
+            </select>
         </div>
     </nav>
 
