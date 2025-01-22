@@ -18,7 +18,6 @@
   <!-- Supabase (CDN) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    /* 실제 프로젝트 키로 교체해 사용 */
     const SUPABASE_URL = "https://xyzysbfukemhbmprtzto.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5enlzYmZ1a2VtaGJtcHJ0enRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzYxNTg4NjIsImV4cCI6MjA1MTczNDg2Mn0.DTRZM9WcXNhILGGGL4BJR40-snEh6Fna008hAGsExbY";
     window.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -184,22 +183,13 @@
     <div id="review-dashboard-root"></div>
   </main>
 
-  <!-- React 코드 (in-browser Babel) -->
+  <!-- React 코드 -->
   <script type="text/babel">
     const { useState, useEffect } = React;
 
-    /**
-     * DB에 저장된 created_at(UTC든 KST든) 문자열을
-     * "있는 그대로" 표시하기 위한 간단한 함수.
-     * ISO 형식(YYYY-MM-DDTHH:mm:ssZ)이라면
-     * T, Z 제거만 진행해서 "YYYY-MM-DD HH:mm:ss" 형태로 보여줍니다.
-     */
     function formatRawTime(isoString) {
       if (!isoString) return '';
-      // 예: "2024-01-19T06:30:00.000Z" -> "2024-01-19 06:30:00.000"
-      //     "2024-01-19T06:30:00" -> "2024-01-19 06:30:00"
       let s = isoString.replace('T', ' ');
-      // .000Z 부분 제거
       s = s.replace('.000Z', '');
       s = s.replace('Z', '');
       return s.trim();
@@ -207,12 +197,10 @@
 
     // 리뷰 카드 컴포넌트
     function ReviewCard({ review }) {
-      // 별점 시각화
       const renderStars = (rating) => {
         return "⭐".repeat(rating);
       };
 
-      // 플랫폼 색상
       const getPlatformColor = (platform) => {
         switch(platform) {
           case "배민": return "bg-blue-100";
@@ -238,13 +226,11 @@
                 </span>
               )}
             </div>
-            {/* created_at을 "그대로" 표시 (UTC -> KST 변환 없음) */}
             <span className="text-gray-600">
               {formatRawTime(review.created_at)}
             </span>
           </div>
 
-          {/* 별점 */}
           <div className="mb-3 text-xl">
             {renderStars(review.star_rating)}
             <span className="ml-2 text-sm text-gray-600">
@@ -252,17 +238,14 @@
             </span>
           </div>
 
-          {/* 주문 메뉴 */}
           <div className="mb-3 px-4 py-2 bg-purple-50 rounded-full inline-block">
             🍽️ {review.order_menu}
           </div>
 
-          {/* 리뷰 내용 (줄바꿈 적용) */}
           <div className="my-4 text-gray-700 bg-gray-50 p-4 rounded-xl whitespace-pre-line">
             {review.review_text}
           </div>
 
-          {/* AI 답글 (줄바꿈 적용) */}
           {review.ai_reply && (
             <div className="mt-4 p-4 bg-yellow-50 rounded-xl border border-yellow-100">
               <div className="flex items-center gap-2 mb-2">
@@ -281,16 +264,17 @@
     function ReviewDashboard() {
       const [stores, setStores] = useState([]);
       const [reviews, setReviews] = useState([]);
+      const [filteredReviews, setFilteredReviews] = useState([]);
       const [selectedStore, setSelectedStore] = useState("all");
       const [selectedPlatform, setPlatform] = useState("all");
       const [selectedDate, setSelectedDate] = useState(new Date());
+      const [selectedRating, setSelectedRating] = useState("all");
       const [userRole, setUserRole] = useState("");
       const [statistics, setStatistics] = useState({
+        total: 0,
         ratings: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
       });
       const [loading, setLoading] = useState(true);
-
-      // 달력
       const [currentMonth, setCurrentMonth] = useState(new Date());
       const [selectedDay, setSelectedDay] = useState(new Date());
 
@@ -304,7 +288,7 @@
         }
       }, []);
 
-      // 가게 목록 로드
+      // 가게 목록 로드 
       async function loadStores(role, userId) {
         try {
           let query = window.supabase
@@ -322,7 +306,6 @@
               query = query.eq("store_code", userId);
               break;
             default:
-              // webmaster -> 전체
               break;
           }
 
@@ -369,33 +352,31 @@
         loadReviews(date);
       }
 
-      // 리뷰 로드 (created_at 기준)
-      // DB가 timestamptz라면 범위 조회가 일반적이나,
-      // 여기서는 간단히 "eq('DATE(created_at)', date)"를 시도하거나
-      // range query로 gte/lte를 사용합니다.
+      // 별점 필터 핸들러
+      const handleRatingFilter = (rating) => {
+        setSelectedRating(rating);
+        if (rating === 'all') {
+          setFilteredReviews(reviews);
+        } else {
+          const filtered = reviews.filter(review => 
+            parseInt(review.star_rating) === parseInt(rating)
+          );
+          setFilteredReviews(filtered);
+        }
+      };
+
+      // 리뷰 로드
       useEffect(() => {
         loadReviews(selectedDate);
-        // eslint-disable-next-line
       }, [selectedStore, selectedPlatform]);
 
       async function loadReviews(date) {
         try {
           setLoading(true);
-
-          // date를 YYYY-MM-DD 형태로 만들기
-          const formattedDate = date.toISOString().split("T")[0];
-
-          // (A) 만약 DB에 DATE(created_at)로 매칭이 가능하다면 (RPC나 뷰, raw SQL 등)
-          // let query = window.supabase
-          //   .from("review_data")
-          //   .select("*")
-          //   .eq("DATE(created_at)", formattedDate);
-
-          // (B) 혹은 범위로 매칭: 0시 ~ 23:59:59
           const startOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0);
-          const endOfDay   = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59);
+          const endOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59);
           const startUtc = startOfDay.toISOString();
-          const endUtc   = endOfDay.toISOString();
+          const endUtc = endOfDay.toISOString();
 
           let query = window.supabase
             .from("review_data")
@@ -413,8 +394,10 @@
           const { data, error } = await query;
           if (error) throw error;
 
-          setReviews(data || []);
-          updateStatistics(data || []);
+          const reviewData = data || [];
+          setReviews(reviewData);
+          handleRatingFilter(selectedRating);
+          updateStatistics(reviewData);
         } catch (err) {
           console.error("리뷰 로드 실패:", err);
         } finally {
@@ -425,14 +408,17 @@
       // 별점 통계
       function updateStatistics(reviewData) {
         const newStats = {
+          total: reviewData.length,
           ratings: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
         };
+        
         reviewData.forEach((r) => {
           const rating = parseInt(r.star_rating, 10);
           if (rating >= 1 && rating <= 5) {
             newStats.ratings[rating] += 1;
           }
         });
+        
         setStatistics(newStats);
       }
 
@@ -446,7 +432,7 @@
 
       return (
         <div className="dashboard-container p-6">
-          {/* 달력 */}
+          {/* 달력 섹션 */}
           <div className="bg-white rounded-lg p-6 shadow-md mb-6">
             <h2 className="text-xl font-bold mb-4">날짜 선택</h2>
             <div className="mb-4 flex justify-between items-center">
@@ -475,8 +461,9 @@
                 className="px-4 py-2 bg-gray-100 rounded hover:bg-gray-200"
               >
                 다음 달
-              </button>
+              </button>          
             </div>
+
             <div className="grid grid-cols-7 gap-1">
               {["일","월","화","수","목","금","토"].map((day) => (
                 <div key={day} className="text-center font-bold py-2">
@@ -484,140 +471,161 @@
                 </div>
               ))}
               {generateCalendar(currentMonth).flat().map((dateObj, idx) => {
-                const isCurrentMonth = (dateObj.getMonth() === currentMonth.getMonth());
-                const isSelected = (dateObj.toDateString() === selectedDay.toDateString());
-                return (
-                  <div
-                    key={idx}
-                    onClick={() => handleDateSelect(dateObj)}
-                    className={`
-                      text-center p-2 cursor-pointer rounded
-                      ${isCurrentMonth ? "text-gray-800" : "text-gray-400"}
-                      ${isSelected ? "bg-blue-500 text-white" : "hover:bg-gray-100"}
-                    `}
-                  >
-                    {dateObj.getDate()}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* 가게 선택 (owner 제외) */}
-          {userRole !== "owner" && (
-            <select
-              className="w-full p-2 mb-4 border rounded"
-              value={selectedStore}
-              onChange={(e) => setSelectedStore(e.target.value)}
-            >
-              <option value="all">전체 가게</option>
-              {stores.map((store) => (
-                <option key={store.store_code} value={store.store_code}>
-                  {store.store_name}
-                </option>
-              ))}
-            </select>
-          )}
-
-          {/* 별점 통계 */}
-          <div className="bg-white rounded-lg p-6 shadow-md mb-6">
-            <h2 className="text-xl font-bold mb-4">별점 통계</h2>
-            <div className="grid grid-cols-5 gap-4">
-              {[5,4,3,2,1].map((rating) => (
-                <div key={rating} className="text-center p-4 bg-gray-50 rounded-lg">
-                  <div className="text-2xl font-bold">
-                    {statistics.ratings[rating]}
-                  </div>
-                  <div className="text-gray-600">
-                    {rating}점
-                  </div>
+              const isCurrentMonth = (dateObj.getMonth() === currentMonth.getMonth());
+              const isSelected = (dateObj.toDateString() === selectedDay.toDateString());
+              return (
+                <div
+                  key={idx}
+                  onClick={() => handleDateSelect(dateObj)}
+                  className={`
+                    text-center p-2 cursor-pointer rounded
+                    ${isCurrentMonth ? "text-gray-800" : "text-gray-400"}
+                    ${isSelected ? "bg-blue-500 text-white" : "hover:bg-gray-100"}
+                  `}
+                >
+                  {dateObj.getDate()}
                 </div>
+              );
+            })}
+            </div>
+            </div>
+
+            {/* 가게 선택 (owner 제외) */}
+            {userRole !== "owner" && (
+              <select
+                className="w-full p-2 mb-4 border rounded"
+                value={selectedStore}
+                onChange={(e) => setSelectedStore(e.target.value)}
+              >
+                <option value="all">전체 가게</option>
+                {stores.map((store) => (
+                  <option key={store.store_code} value={store.store_code}>
+                    {store.store_name}
+                  </option>
+                ))}
+              </select>
+            )}
+
+            {/* 별점 통계 및 필터 */}
+            <div className="bg-white rounded-lg p-6 shadow-md mb-6">
+              <h2 className="text-xl font-bold mb-4">별점 통계</h2>
+              <div className="grid grid-cols-6 gap-4">
+                {/* 전체(통합) 통계 */}
+                <button
+                  onClick={() => handleRatingFilter('all')}
+                  className={`text-center p-4 rounded-lg transition-all duration-200 ${
+                    selectedRating === 'all' 
+                      ? 'bg-gray-800 text-white' 
+                      : 'bg-gray-50 hover:bg-gray-100'
+                  }`}
+                >
+                  <div className="text-2xl font-bold">{statistics.total}</div>
+                  <div className="text-gray-600">통합</div>
+                </button>
+                
+                {/* 각 별점 통계 */}
+                {[5,4,3,2,1].map(rating => (
+                  <button
+                    key={rating}
+                    onClick={() => handleRatingFilter(rating)}
+                    className={`text-center p-4 rounded-lg transition-all duration-200 ${
+                      selectedRating === rating.toString()
+                        ? 'bg-gray-800 text-white'
+                        : 'bg-gray-50 hover:bg-gray-100'
+                    }`}
+                  >
+                    <div className="text-2xl font-bold">{statistics.ratings[rating]}</div>
+                    <div className="text-gray-600">{rating}점</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 플랫폼 필터 */}
+            <div className="flex gap-4 mb-6">
+              {['all', '배민', '쿠팡', '요기요'].map(platform => (
+                <button 
+                  key={platform}
+                  onClick={() => setPlatform(platform)}
+                  className={`px-4 py-2 rounded-lg ${
+                    selectedPlatform === platform 
+                      ? 'bg-gray-800 text-white' 
+                      : 'bg-white'
+                  }`}
+                >
+                  {platform === 'all' ? '전체' : platform}
+                </button>
               ))}
             </div>
-          </div>
 
-          {/* 플랫폼 필터 */}
-          <div className="flex gap-4 mb-6">
-            {["all", "배민", "쿠팡", "요기요"].map((platform) => (
-              <button
-                key={platform}
-                onClick={() => setPlatform(platform)}
-                className={`
-                  px-4 py-2 rounded-lg
-                  ${selectedPlatform === platform ? "bg-gray-800 text-white" : "bg-white"}
-                `}
-              >
-                {platform === "all" ? "전체" : platform}
-              </button>
-            ))}
-          </div>
+            {/* 리뷰 목록 */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-bold mb-4">
+                {formatDate(selectedDate)} 리뷰
+                {selectedRating !== 'all' && ` (${selectedRating}점)`}
+              </h3>
+              {loading ? (
+                <div className="text-center py-8">데이터를 불러오는 중...</div>
+              ) : filteredReviews.length === 0 ? (
+                <div className="text-center py-8">리뷰가 없습니다.</div>
+              ) : (
+                filteredReviews.map((review, index) => (
+                  <ReviewCard key={index} review={review} />
+                ))
+              )}
+            </div>
+            </div>
+            );
+            }
 
-          {/* 리뷰 목록 */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-bold mb-4">
-              {formatDate(selectedDate)} 리뷰
-            </h3>
-            {loading ? (
-              <div className="text-center py-8">데이터를 불러오는 중...</div>
-            ) : reviews.length === 0 ? (
-              <div className="text-center py-8">리뷰가 없습니다.</div>
-            ) : (
-              reviews.map((review, i) => (
-                <ReviewCard key={i} review={review} />
-              ))
-            )}
-          </div>
-        </div>
-      );
-    }
+            // 렌더링
+            const rootElement = document.getElementById("review-dashboard-root");
+            const root = ReactDOM.createRoot(rootElement);
+            root.render(<ReviewDashboard />);
+            </script>
 
-    // 렌더링
-    const rootElement = document.getElementById("review-dashboard-root");
-    const root = ReactDOM.createRoot(rootElement);
-    root.render(<ReviewDashboard />);
-  </script>
+            <!-- 네비게이션 권한 관리 -->
+            <script>
+            document.addEventListener("DOMContentLoaded", function () {
+              const userRaw = sessionStorage.getItem("userInfo") || "{}";
+              let userInfo;
+              try {
+                userInfo = JSON.parse(userRaw);
+              } catch(e) {
+                userInfo = {};
+              }
 
-  <!-- 네비게이션 권한 관리 -->
-  <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      const userRaw = sessionStorage.getItem("userInfo") || "{}";
-      let userInfo;
-      try {
-        userInfo = JSON.parse(userRaw);
-      } catch(e) {
-        userInfo = {};
-      }
+              const navMenu = document.getElementById("navMenu");
 
-      const navMenu = document.getElementById("navMenu");
+              // 로그인 안 되어 있으면 login.html로
+              if (!userInfo.role) {
+                window.location.href = "login.html";
+              } else {
+                updateMenuByRole(userInfo.role);
+              }
 
-      // 로그인 안 되어 있으면 login.html로
-      if (!userInfo.role) {
-        window.location.href = "login.html";
-      } else {
-        updateMenuByRole(userInfo.role);
-      }
+              function updateMenuByRole(role) {
+                let menuLinks = `<a href="layout.html" class="nav-link">리뷰 모아보기</a>`;
+                if (role === "webmaster" || role === "admin") {
+                  menuLinks += `<a href="customer_data.html" class="nav-link">고객 데이터 관리</a>`;
+                }
+                if (role === "webmaster") {
+                  menuLinks += `<a href="error_logs.html" class="nav-link">에러 로그</a>`;
+                }
 
-      function updateMenuByRole(role) {
-        let menuLinks = `<a href="layout.html" class="nav-link">리뷰 모아보기</a>`;
-        if (role === "webmaster" || role === "admin") {
-          menuLinks += `<a href="customer_data.html" class="nav-link">고객 데이터 관리</a>`;
-        }
-        if (role === "webmaster") {
-          menuLinks += `<a href="error_logs.html" class="nav-link">에러 로그</a>`;
-        }
+                navMenu.innerHTML = menuLinks;
 
-        navMenu.innerHTML = menuLinks;
+                // 현재 페이지 활성화
+                const currentPage = window.location.pathname.split("/").pop();
+                const menuItems = navMenu.querySelectorAll(".nav-link");
+                menuItems.forEach((item) => {
+                  if (item.getAttribute("href") === currentPage) {
+                    item.classList.add("active");
+                  }
+                });
+              }
+            });
+            </script>
 
-        // 현재 페이지 활성화
-        const currentPage = window.location.pathname.split("/").pop();
-        const menuItems = navMenu.querySelectorAll(".nav-link");
-        menuItems.forEach((item) => {
-          if (item.getAttribute("href") === currentPage) {
-            item.classList.add("active");
-          }
-        });
-      }
-    });
-  </script>
-</body>
-</html>
+            </body>
+            </html>
