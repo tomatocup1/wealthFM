@@ -4,16 +4,17 @@ import { supabase } from './supabaseClient';
 const ReviewDashboard = () => {
     const [stores, setStores] = useState([]);
     const [reviews, setReviews] = useState([]);
+    const [filteredReviews, setFilteredReviews] = useState([]);
     const [selectedStore, setSelectedStore] = useState('all');
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [selectedPlatform, setPlatform] = useState('all');
+    const [selectedRating, setSelectedRating] = useState('all');
     const [statistics, setStatistics] = useState({
+        total: 0,
         ratings: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
     });
     const [userRole, setUserRole] = useState('');
     const [loading, setLoading] = useState(true);
-
-    // 달력을 위한 상태들
     const [currentMonth, setCurrentMonth] = useState(new Date());
     const [selectedDay, setSelectedDay] = useState(new Date());
 
@@ -49,8 +50,20 @@ const ReviewDashboard = () => {
     const handleDateSelect = (date) => {
         setSelectedDay(date);
         setSelectedDate(date);
-        // 선택된 날짜로 리뷰 데이터 로드
         loadReviews(date);
+    };
+
+    // 별점 필터 핸들러
+    const handleRatingFilter = (rating) => {
+        setSelectedRating(rating);
+        if (rating === 'all') {
+            setFilteredReviews(reviews);
+        } else {
+            const filtered = reviews.filter(review => 
+                parseInt(review.star_rating) === parseInt(rating)
+            );
+            setFilteredReviews(filtered);
+        }
     };
 
     // 리뷰 데이터 로드 함수
@@ -61,7 +74,7 @@ const ReviewDashboard = () => {
             
             let query = supabase
                 .from('review_data')
-                .select('*') // ai_reply도 포함됨
+                .select('*')
                 .eq('review_date', formattedDate);
 
             if (selectedStore !== 'all') {
@@ -75,8 +88,10 @@ const ReviewDashboard = () => {
             const { data, error } = await query;
             if (error) throw error;
 
-            setReviews(data || []);
-            updateStatistics(data || []);
+            const reviewData = data || [];
+            setReviews(reviewData);
+            handleRatingFilter(selectedRating); // 현재 선택된 별점 필터 적용
+            updateStatistics(reviewData);
         } catch (error) {
             console.error('리뷰 로드 실패:', error);
         } finally {
@@ -87,6 +102,7 @@ const ReviewDashboard = () => {
     // 통계 업데이트
     const updateStatistics = (reviewData) => {
         const newStats = {
+            total: reviewData.length,
             ratings: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
         };
 
@@ -108,6 +124,33 @@ const ReviewDashboard = () => {
             day: 'numeric'
         });
     };
+
+    useEffect(() => {
+        loadReviews(selectedDate);
+    }, [selectedStore, selectedPlatform]);
+
+    // 리뷰 카드 컴포넌트
+    const ReviewCard = ({ review }) => (
+        <div className="bg-white rounded-lg p-4 shadow-md">
+            <div className="flex justify-between items-center mb-2">
+                <div>
+                    <span className="font-semibold">{review.store_name}</span>
+                    <span className="ml-2 text-gray-600">{review.platform}</span>
+                </div>
+                <span className="text-gray-600">{review.review_date}</span>
+            </div>
+            <div className="mb-2">{review.review_text}</div>
+            <div className="text-gray-600">
+                <span>주문메뉴: {review.order_menu}</span>
+                <span className="ml-4">별점: {review.star_rating}점</span>
+            </div>
+            {review.ai_reply && (
+                <div className="mt-2 p-2 bg-gray-50">
+                    <strong>사장님 답글:</strong> {review.ai_reply}
+                </div>
+            )}
+        </div>
+    );
 
     return (
         <div className="dashboard-container p-6">
@@ -150,10 +193,9 @@ const ReviewDashboard = () => {
                             className={`
                                 text-center p-2 cursor-pointer rounded
                                 ${date.getMonth() === currentMonth.getMonth() ? 'text-gray-800' : 'text-gray-400'}
-                                ${
-                                    selectedDay.toDateString() === date.toDateString()
-                                        ? 'bg-blue-500 text-white'
-                                        : 'hover:bg-gray-100'
+                                ${selectedDay.toDateString() === date.toDateString()
+                                    ? 'bg-blue-500 text-white'
+                                    : 'hover:bg-gray-100'
                                 }
                             `}
                         >
@@ -163,7 +205,7 @@ const ReviewDashboard = () => {
                 </div>
             </div>
 
-            {/* 가게 선택 (owner가 아닐 때만) */}
+            {/* 가게 선택 */}
             {userRole !== 'owner' && (
                 <select 
                     className="w-full p-2 mb-4 border rounded"
@@ -179,15 +221,37 @@ const ReviewDashboard = () => {
                 </select>
             )}
 
-            {/* 통계 섹션 */}
+            {/* 별점 통계 및 필터 */}
             <div className="bg-white rounded-lg p-6 shadow-md mb-6">
                 <h2 className="text-xl font-bold mb-4">별점 통계</h2>
-                <div className="grid grid-cols-5 gap-4">
+                <div className="grid grid-cols-6 gap-4">
+                    {/* 전체(통합) 통계 */}
+                    <button
+                        onClick={() => handleRatingFilter('all')}
+                        className={`text-center p-4 rounded-lg transition-all duration-200 ${
+                            selectedRating === 'all' 
+                                ? 'bg-gray-800 text-white' 
+                                : 'bg-gray-50 hover:bg-gray-100'
+                        }`}
+                    >
+                        <div className="text-2xl font-bold">{statistics.total}</div>
+                        <div className="text-gray-600">통합</div>
+                    </button>
+                    
+                    {/* 각 별점 통계 */}
                     {[5,4,3,2,1].map(rating => (
-                        <div key={rating} className="text-center p-4 bg-gray-50 rounded-lg">
+                        <button
+                            key={rating}
+                            onClick={() => handleRatingFilter(rating)}
+                            className={`text-center p-4 rounded-lg transition-all duration-200 ${
+                                selectedRating === rating.toString()
+                                    ? 'bg-gray-800 text-white'
+                                    : 'bg-gray-50 hover:bg-gray-100'
+                            }`}
+                        >
                             <div className="text-2xl font-bold">{statistics.ratings[rating]}</div>
                             <div className="text-gray-600">{rating}점</div>
-                        </div>
+                        </button>
                     ))}
                 </div>
             </div>
@@ -211,34 +275,17 @@ const ReviewDashboard = () => {
 
             {/* 리뷰 목록 */}
             <div className="space-y-4">
-                <h3 className="text-lg font-bold mb-4">{formatDate(selectedDate)} 리뷰</h3>
+                <h3 className="text-lg font-bold mb-4">
+                    {formatDate(selectedDate)} 리뷰
+                    {selectedRating !== 'all' && ` (${selectedRating}점)`}
+                </h3>
                 {loading ? (
                     <div className="text-center py-8">데이터를 불러오는 중...</div>
-                ) : reviews.length === 0 ? (
+                ) : filteredReviews.length === 0 ? (
                     <div className="text-center py-8">리뷰가 없습니다.</div>
                 ) : (
-                    reviews.map((review, index) => (
-                        <div key={index} className="bg-white rounded-lg p-4 shadow-md">
-                            <div className="flex justify-between items-center mb-2">
-                                <div>
-                                    <span className="font-semibold">{review.store_name}</span>
-                                    <span className="ml-2 text-gray-600">{review.platform}</span>
-                                </div>
-                                <span className="text-gray-600">{review.review_date}</span>
-                            </div>
-                            <div className="mb-2">{review.review_text}</div>
-                            <div className="text-gray-600">
-                                <span>주문메뉴: {review.order_menu}</span>
-                                <span className="ml-4">별점: {review.star_rating}점</span>
-                            </div>
-
-                            {/* AI 답변 영역 */}
-                            {review.ai_reply && (
-                              <div className="mt-2 p-2 bg-gray-50">
-                                <strong>사장님 답글:</strong> {review.ai_reply}
-                              </div>
-                            )}
-                        </div>
+                    filteredReviews.map((review, index) => (
+                        <ReviewCard key={index} review={review} />
                     ))
                 )}
             </div>
