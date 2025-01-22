@@ -5,8 +5,10 @@ class NavigationManager {
     constructor() {
         this.navMenu = document.getElementById('navMenu');
         this.roleSelect = document.getElementById('roleSelect');
+        this.hamburgerMenu = document.getElementById('hamburgerMenu');
         this.currentPage = window.location.pathname.split('/').pop();
         this.userInfo = null;
+        this.isMobileMenuOpen = false;
     }
 
     // 네비게이션 초기화
@@ -14,10 +16,9 @@ class NavigationManager {
         try {
             // 세션 체크
             this.userInfo = checkSession();
-            // 페이지 이름이 index.html이면 세션 없다고 해도 그냥 통과
             const currentPage = window.location.pathname.split('/').pop();
+            
             if (currentPage === 'index.html') {
-                // return 하거나, userInfo 안 쓰도록
                 return;
             }
             
@@ -31,6 +32,9 @@ class NavigationManager {
 
             // 메뉴 설정
             this.setupMenu();
+
+            // 모바일 메뉴 설정
+            this.setupMobileMenu();
 
             // 이벤트 리스너 설정
             this.setupEventListeners();
@@ -99,6 +103,22 @@ class NavigationManager {
         this.highlightCurrentPage();
     }
 
+    // 모바일 메뉴 설정
+    setupMobileMenu() {
+        // 햄버거 메뉴 버튼 생성 및 추가
+        if (!this.hamburgerMenu) {
+            this.hamburgerMenu = document.createElement('button');
+            this.hamburgerMenu.id = 'hamburgerMenu';
+            this.hamburgerMenu.className = 'hamburger-menu md:hidden';
+            this.hamburgerMenu.innerHTML = `
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            `;
+            this.navMenu.parentElement.insertBefore(this.hamburgerMenu, this.navMenu);
+        }
+    }
+
     // 현재 페이지 하이라이트
     highlightCurrentPage() {
         this.navMenu.querySelectorAll('.nav-link').forEach(link => {
@@ -128,30 +148,71 @@ class NavigationManager {
         return true;
     }
 
+    // 모바일 메뉴 토글
+    toggleMobileMenu() {
+        this.isMobileMenuOpen = !this.isMobileMenuOpen;
+        if (this.isMobileMenuOpen) {
+            this.navMenu.classList.add('active');
+            this.hamburgerMenu.classList.add('active');
+        } else {
+            this.navMenu.classList.remove('active');
+            this.hamburgerMenu.classList.remove('active');
+        }
+    }
+
+    // 모바일 메뉴 닫기
+    closeMobileMenu() {
+        if (this.isMobileMenuOpen) {
+            this.isMobileMenuOpen = false;
+            this.navMenu.classList.remove('active');
+            this.hamburgerMenu.classList.remove('active');
+        }
+    }
+
     // 이벤트 리스너 설정
     setupEventListeners() {
+        // 햄버거 메뉴 클릭 이벤트
+        if (this.hamburgerMenu) {
+            this.hamburgerMenu.addEventListener('click', () => {
+                this.toggleMobileMenu();
+            });
+        }
+
         // 네비게이션 링크 클릭 이벤트
         this.navMenu.addEventListener('click', (e) => {
             if (e.target.classList.contains('nav-link')) {
                 e.preventDefault();
                 const href = e.target.getAttribute('href');
+                this.closeMobileMenu();
                 this.navigateToPage(href);
+            }
+        });
+
+        // 화면 크기 변경 이벤트
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 768) {
+                this.closeMobileMenu();
+            }
+        });
+
+        // 문서 클릭시 모바일 메뉴 닫기
+        document.addEventListener('click', (e) => {
+            if (this.isMobileMenuOpen && 
+                !this.navMenu.contains(e.target) && 
+                !this.hamburgerMenu.contains(e.target)) {
+                this.closeMobileMenu();
             }
         });
     }
 
     // 페이지 이동
     navigateToPage(href) {
-        // 현재 페이지 상태 저장 (필요한 경우)
         this.savePageState();
-
-        // 페이지 이동
         window.location.href = href;
     }
 
     // 현재 페이지 상태 저장
     savePageState() {
-        // 필요한 상태 저장 로직 구현
         const pageState = {
             lastVisited: new Date().toISOString()
         };

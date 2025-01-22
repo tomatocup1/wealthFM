@@ -52,58 +52,68 @@
     }
 
     /* ===== 2. 네비게이션 ===== */
+    /* 네비게이션 바 기본 스타일 */
     .navbar {
-      background-color: #ffffff;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      padding: 1rem;
-      position: fixed;
-      width: 100%;
-      top: 0;
-      z-index: 1000;
+        background-color: #ffffff;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        position: fixed;
+        width: 100%;
+        top: 0;
+        z-index: 1000;
     }
 
     .nav-content {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 1rem;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
 
     .nav-brand {
-      font-size: 1.5rem;
-      font-weight: bold;
-      color: #1b2024;
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: var(--heading-color);
     }
 
+    /* 햄버거 메뉴 버튼 스타일 */
+    .hamburger-menu {
+        display: none;
+        background: none;
+        border: none;
+        padding: 0.5rem;
+        cursor: pointer;
+        color: var(--text-color);
+    }
+
+    /* 네비게이션 메뉴 스타일 */
     .nav-menu {
-      display: flex;
-      gap: 2rem;
+        display: flex;
+        gap: 2rem;
     }
 
     .nav-link {
-      text-decoration: none;
-      color: #1f1010;
-      padding: 0.5rem;
-      font-size: 1.1rem;
-      transition: color 0.3s;
+        text-decoration: none;
+        color: var(--text-color);
+        padding: 0.5rem;
+        font-size: 1.1rem;
     }
 
     .nav-link:hover {
-      color: #1b2024;
+        color: var(--accent-color);
     }
 
     .nav-link.active {
-      color: #1b2024;
-      border-bottom: 2px solid #1b2024;
+        color: var(--accent-color);
+        border-bottom: 2px solid var(--accent-color);
     }
 
     .role-select {
-      padding: 0.5rem;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-family: 'Arial', sans-serif;
+        padding: 0.5rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-family: 'Arial', sans-serif;
     }
 
     /* ===== 3. 메인 콘텐츠 ===== */
@@ -144,10 +154,47 @@
       color: #fff;
     }
 
+/* 모바일 반응형 스타일 */
     @media (max-width: 768px) {
-      .nav-menu {
-        display: none;
-      }
+        .hamburger-menu {
+            display: block;
+        }
+
+        .nav-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background-color: #ffffff;
+            padding: 1rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .nav-menu.active {
+            display: block;
+        }
+
+        .nav-links {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .nav-link {
+            display: block;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .nav-link:last-child {
+            border-bottom: none;
+        }
+
+        .role-select {
+            font-size: 14px;
+        }
+    }
       .main-content {
         padding: var(--spacing-sm);
       }
@@ -160,23 +207,37 @@
 </head>
 
 <body>
-  <!-- 네비게이션 바 -->
-  <nav class="navbar">
-    <div class="nav-content">
-      <div class="nav-brand">부의 정석</div>
-      <div class="nav-menu" id="navMenu">
+<!-- 네비게이션 바 -->
+<nav class="navbar">
+  <div class="nav-content">
+    <!-- 로고 -->
+    <div class="nav-brand">부의 정석</div>
+
+    <!-- 햄버거 메뉴 버튼 (모바일) -->
+    <button type="button" class="hamburger-menu md:hidden" aria-label="메뉴 열기">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-6 h-6">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+      </svg>
+    </button>
+
+    <!-- 네비게이션 메뉴 -->
+    <div class="nav-menu" id="navMenu">
+      <div class="nav-links">
         <a href="layout.html" class="nav-link">리뷰 모아보기</a>
         <a href="customer_data.html" class="nav-link">고객 데이터 관리</a>
         <a href="error_logs.html" class="nav-link">에러 로그</a>
       </div>
-      <select class="role-select" id="roleSelect">
-        <option value="webmaster">웹마스터</option>
-        <option value="admin">관리자</option>
-        <option value="franchise">프렌차이즈</option>
-        <option value="owner">점주님</option>
-      </select>
     </div>
-  </nav>
+
+    <!-- 역할 선택 -->
+    <select class="role-select" id="roleSelect">
+      <option value="webmaster">웹마스터</option>
+      <option value="admin">관리자</option>
+      <option value="franchise">프랜차이즈</option>
+      <option value="owner">점주님</option>
+    </select>
+  </div>
+</nav>
 
   <!-- 메인 콘텐츠 영역 -->
   <main class="main-content">
