@@ -206,40 +206,39 @@
             margin-bottom: 15px;
             color: #1b2024;
         }
+            @media (max-width: 768px) {
+                .hamburger-menu {
+                    display: block !important; /* !important 추가 */
+                    z-index: 100;
+                }
 
-        /* 모바일 반응형 스타일 */
-        @media (max-width: 768px) {
-            .hamburger-menu {
-                display: block;
+                .nav-menu {
+                    display: none;
+                    position: absolute;
+                    top: 100%;
+                    left: 0;
+                    width: 100%;
+                    background-color: #ffffff;
+                    padding: 1rem;
+                    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                }
+
+                .nav-menu.active {
+                    display: block !important; /* !important 추가 */
+                }
+
+                .nav-links {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 1rem;
+                }
+
+                .nav-link {
+                    display: block;
+                    padding: 0.75rem 1rem;
+                    border-bottom: 1px solid #eee;
+                }
             }
-
-            .nav-menu {
-                display: none;
-                position: absolute;
-                top: 100%;
-                left: 0;
-                width: 100%;
-                background-color: #ffffff;
-                padding: 1rem;
-                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            }
-
-            .nav-menu.active {
-                display: block;
-            }
-
-            .nav-links {
-                display: flex;
-                flex-direction: column;
-                gap: 1rem;
-            }
-
-            .nav-link {
-                display: block;
-                padding: 0.75rem 1rem;
-                border-bottom: 1px solid #eee;
-            }
-
             .nav-link:last-child {
                 border-bottom: none;
             }
@@ -568,6 +567,35 @@
                 }
                 navMenu.innerHTML = links;
             }
+        });
+    </script>
+     <!-- 햄버거 메뉴 스크립트 추가 -->
+     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 햄버거 메뉴 요소 선택
+            const hamburgerBtn = document.querySelector('.hamburger-menu');
+            const navMenu = document.querySelector('.nav-menu');
+
+            // 햄버거 메뉴 클릭 이벤트
+            if (hamburgerBtn) {
+                hamburgerBtn.addEventListener('click', function() {
+                    navMenu.classList.toggle('active');
+                });
+            }
+
+            // 화면 크기 변경 시 메뉴 초기화
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 768) {
+                    navMenu.classList.remove('active');
+                }
+            });
+
+            // 메뉴 외부 클릭시 닫기
+            document.addEventListener('click', function(e) {
+                if (!navMenu.contains(e.target) && !hamburgerBtn.contains(e.target)) {
+                    navMenu.classList.remove('active');
+                }
+            });
         });
     </script>
 </body>
